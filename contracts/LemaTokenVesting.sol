@@ -79,91 +79,167 @@ contract LemaTokenVesting is Ownable {
 
     function createPrivateSaleVesting() public onlyOwner {
         require(grants[privateSale].length <= 0, "Already Created !");
-        addToTokenVesting(privateSale, 150000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
-        addToTokenVesting(privateSale, 150000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
-        addToTokenVesting(privateSale, 150000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
-        addToTokenVesting(privateSale, 150000000e18, contractDeployedTimestamp + 82 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
+        addToTokenVesting(privateSale, 75000000e18, contractDeployedTimestamp + 132 weeks, 12 weeks);
     }
 
     function createPresaleVesting() public onlyOwner {
         require(grants[presale].length <= 0, "Already Created !");
-        addToTokenVesting(presale, 100000000e18, contractDeployedTimestamp + 12 weeks, 12 weeks);
-        addToTokenVesting(presale, 100000000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
-        addToTokenVesting(presale, 100000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
-        addToTokenVesting(presale, 100000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(presale, 50000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
     }
 
     function createMarketingVesting() public onlyOwner {
         require(grants[marketing].length <= 0, "Already Created !");
         addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp, 12 weeks);
-        addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
-        addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
-        addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
-        addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
-        addToTokenVesting(marketing, 250000000e18, contractDeployedTimestamp + 132 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 132 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 156 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 180 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 204 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 228 weeks, 12 weeks);
+        addToTokenVesting(marketing, 125000000e18, contractDeployedTimestamp + 252 weeks, 12 weeks);
     }
 
     function createStakingIncentiveDiscountVesting() public onlyOwner {
         require(grants[stakingIncentiveDiscount].length <= 0, "Already Created !");
-        addToTokenVesting(stakingIncentiveDiscount, 200000000e18, contractDeployedTimestamp, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 200000000e18, contractDeployedTimestamp + 12 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 175000000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 175000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 150000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 150000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 125000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 125000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp + 12 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 100000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 87500000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 87500000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 87500000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 87500000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 75000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 75000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
         addToTokenVesting(stakingIncentiveDiscount, 75000000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
         addToTokenVesting(stakingIncentiveDiscount, 75000000e18, contractDeployedTimestamp + 132 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 156 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 180 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 62500000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 62500000e18, contractDeployedTimestamp + 156 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 62500000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 62500000e18, contractDeployedTimestamp + 180 weeks, 12 weeks);
         addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 204 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 228 weeks, 12 weeks);
-        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 240 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 204 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 50000000e18, contractDeployedTimestamp + 228 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 37500000e18, contractDeployedTimestamp + 240 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 37500000e18, contractDeployedTimestamp + 252 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 37500000e18, contractDeployedTimestamp + 264 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 37500000e18, contractDeployedTimestamp + 276 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 288 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 300 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 312 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 324 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 336 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 348 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 360 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 372 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 384 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 396 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 25000000e18, contractDeployedTimestamp + 408 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 420 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 432 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 444 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 456 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 468 weeks, 12 weeks);
+        addToTokenVesting(stakingIncentiveDiscount, 12500000e18, contractDeployedTimestamp + 480 weeks, 12 weeks);
     }
 
     function createAdvisorVesting() public onlyOwner {
         require(grants[advisor].length <= 0, "Already Created !");
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
-        addToTokenVesting(advisor, 62500000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 240 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 264 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 288 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 312 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 336 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 360 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 384 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 408 weeks, 12 weeks);
+        addToTokenVesting(advisor, 31250000e18, contractDeployedTimestamp + 432 weeks, 12 weeks);
     }
 
     function createTeamVesting() public onlyOwner {
         require(grants[team].length <= 0, "Already Created !");
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
-        addToTokenVesting(team, 250000000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 240 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 264 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 288 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 312 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 336 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 360 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 384 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 408 weeks, 12 weeks);
+        addToTokenVesting(team, 125000000e18, contractDeployedTimestamp + 432 weeks, 12 weeks);
     }
 
     function createTreasuryVesting() public onlyOwner {
         require(grants[treasury].length <= 0, "Already Created !");
         addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 12 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
-        addToTokenVesting(treasury, 250000000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 12 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 24 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 36 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 48 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 60 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 72 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 84 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 96 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 108 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 120 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 132 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 144 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 156 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 168 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 180 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 192 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 204 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 216 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 228 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 240 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 252 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 264 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 276 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 288 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 300 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 312 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 324 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 336 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 348 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 360 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 372 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 384 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 396 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 408 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 420 weeks, 12 weeks);
+        addToTokenVesting(treasury, 62500000e18, contractDeployedTimestamp + 432 weeks, 12 weeks);
     }
 
     // Get number of lema token vested
