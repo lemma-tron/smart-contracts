@@ -17,10 +17,11 @@ contract LemaChef is Ownable {
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
-        uint256 lastDeposit; // last deposited timestamp
+        uint256 lastStakedDate; // last staked timestamp
+        uint256 lastDeposited; // last deposited timestamp
         uint256 lastDepositedAmount; // last deposited amount
         //
-        // We do some fancy math here. Basically, any point in time, the amount of lemas
+        // We do some fancy math here. Basically, any point in time, the amount of LEMAs
         // entitled to a user but is pending to be distributed is:
         //
         //   pending reward = (user.amount * pool.accLEMAPerShare) - user.rewardDebt
@@ -35,9 +36,9 @@ contract LemaChef is Ownable {
     // Info of each pool.
     struct PoolInfo {
         IBEP20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. BOUNTIES to distribute per block.
-        uint256 lastRewardBlock; // Last block number that BOUNTIES distribution occurs.
-        uint256 accLEMAPerShare; // Accumulated BOUNTIES per share, times 1e12. See below.
+        uint256 allocPoint; // How many allocation points assigned to this pool. LEMAs to distribute per block.
+        uint256 lastRewardBlock; // Last block number that LEMAs distribution occurs.
+        uint256 accLEMAPerShare; // Accumulated LEMAs per share, times 1e12. See below.
     }
 
     string public name = "Lema Chef";
@@ -58,19 +59,13 @@ contract LemaChef is Ownable {
     // The block number when mining starts.
     uint256 public startBlock;
 
-    // penalty fee when withdrawing staked amount within 12/24 weeks of last deposit
-    uint256 public penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 12 weeks
-    uint256 public penaltyFeeRate2 = 10; // fee if last deposited is < 24 weeks
+    // penalty fee when withdrawing reward within 4 weeks of last deposit and after 4 weeks
+    uint256 public penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
+    uint256 public penaltyFeeRate2 = 15; // fee if last deposited is > 4 weeks (always implemented)
     // Penalties period
-    uint256 public penaltyPeriod1 = 12 weeks;
-    uint256 public penaltyPeriod2 = 24 weeks;
-    // Penalty fee collector address
-    address public penaltyAddress;
-
-    // Liquidity fee address
-    address public liqAddress;
-    // Default fee for liquidity: 10%
-    uint16 public liqRate = 10;
+    uint256 public penaltyPeriod = 4 weeks;
+    // Treasury address
+    address public treasury;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -82,14 +77,12 @@ contract LemaChef is Ownable {
 
     constructor(
         LemaToken _lemaToken,
-        address _liqAddress,
-        address _penaltyAddress,
+        address _treasury,
         uint256 _lemaPerBlock,
         uint256 _startBlock
     ) public {
         lemaToken = _lemaToken;
-        liqAddress = _liqAddress;
-        penaltyAddress = _penaltyAddress;
+        treasury = _treasury;
         lemaPerBlock = _lemaPerBlock;
         startBlock = _startBlock;
 
@@ -227,7 +220,7 @@ contract LemaChef is Ownable {
     {
         PoolInfo storage pool = poolInfo[_pid]; //getting the specific pool with it id
         UserInfo storage user = userInfo[_pid][_user]; //getting user belongs to that pool
-        uint256 accLEMAPerShare = pool.accLEMAPerShare; //getting the accumulated lemapershare in that pool
+        uint256 accLEMAPerShare = pool.accLEMAPerShare; //getting the accumulated lema pershare in that pool
         uint256 lpSupply = pool.lpToken.balanceOf(address(this)); //how many lptokens are there in that pool
         if (block.number > pool.lastRewardBlock && lpSupply != 0) {
             uint256 multiplier = getMultiplier(
@@ -242,10 +235,10 @@ contract LemaChef is Ownable {
                 lemaReward.mul(1e12).div(lpSupply)
             ); //accumulated Lema per each share
         }
-        return user.amount.mul(accLEMAPerShare).div(1e12).sub(user.rewardDebt); //get the pending bounties which are rewarded to us to harvest
+        return user.amount.mul(accLEMAPerShare).div(1e12).sub(user.rewardDebt); //get the pending LEMAs which are rewarded to us to harvest
     }
 
-    // Safe Lema transfer function, just in case if rounding error causes pool to not have enough lemas.
+    // Safe Lema transfer function, just in case if rounding error causes pool to not have enough LEMAs.
     function safeLEMATransfer(address _to, uint256 _amount) internal {
         uint256 lemaBal = lemaToken.balanceOf(address(this));
         if (_amount > lemaBal) {
@@ -266,6 +259,36 @@ contract LemaChef is Ownable {
         }
     }
 
+    // to fetch staked amount in given pool of given user
+    // this can be used to know if user has staked or not
+    function getStakedAmountInPool(uint256 _pid, address _user) external view returns (uint256) {
+        UserInfo memory user = userInfo[_pid][_user];
+        return user.amount;
+    }
+
+    // to fetch last staked date in given pool of given user
+    function getLastStakedDateInPool(uint256 _pid, address _user) external view returns (uint256) {
+        UserInfo memory user = userInfo[_pid][_user];
+        return user.lastStakedDate;
+    }
+
+    function transferRewardWithWithdrawFee(uint256 userLastDeposited, uint256 pending) internal {
+        uint256 withdrawFee = 0;
+        uint256 currentTimestamp = block.timestamp;
+        if (currentTimestamp < userLastDeposited.add(penaltyPeriod)) {
+            withdrawFee = getWithdrawFee(pending, penaltyFeeRate1);
+        } else {
+            withdrawFee = getWithdrawFee(pending, penaltyFeeRate2);
+        }
+
+        uint256 rewardAmount = pending.sub(withdrawFee);
+
+        require(pending == withdrawFee + rewardAmount, "Lema::transfer: Liq value invalid");
+
+        safeLEMATransfer(treasury, withdrawFee);
+        safeLEMATransfer(msg.sender, rewardAmount);
+    }
+
     // Deposit LP tokens to LemaChef for Lema allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
         require(_pid != 0, "deposit Lema by staking");
@@ -279,16 +302,7 @@ contract LemaChef is Ownable {
                 .div(1e12)
                 .sub(user.rewardDebt);
             if (pending > 0) {
-                uint256 liqFeeAmount = pending.mul(liqRate).div(100);
-                uint256 rewardAmount = pending.sub(liqFeeAmount);
-
-                require(
-                    pending == liqFeeAmount + rewardAmount,
-                    "Lema::transfer: Liq value invalid"
-                );
-
-                safeLEMATransfer(liqAddress, liqFeeAmount);
-                safeLEMATransfer(msg.sender, rewardAmount);
+                transferRewardWithWithdrawFee(user.lastDeposited, pending);
             }
         }
         if (_amount > 0) {
@@ -298,7 +312,8 @@ contract LemaChef is Ownable {
                 _amount
             );
             user.amount = user.amount.add(_amount);
-            user.lastDeposit = getLastDepositTimestamp(user.lastDeposit, user.lastDepositedAmount, _amount);
+            user.lastStakedDate = getLastDepositTimestamp(user.lastDeposited, user.lastDepositedAmount, _amount);
+            user.lastDeposited = block.timestamp;
             user.lastDepositedAmount = _amount;
         }
 
@@ -309,7 +324,6 @@ contract LemaChef is Ownable {
     // Withdraw LP tokens from LemaChef.
     function withdraw(uint256 _pid, uint256 _amount) public {
         require(_pid != 0, "withdraw Lema by unstaking");
-        uint256 withdrawFee = 0;
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -318,30 +332,14 @@ contract LemaChef is Ownable {
             user.rewardDebt
         );
         if (pending > 0) {
-            safeLEMATransfer(msg.sender, pending);
+            transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
-
-            uint256 currentTimestamp = block.timestamp;
-            if (currentTimestamp < user.lastDeposit.add(penaltyPeriod1)) {
-                withdrawFee = getWithdrawFee(_amount, penaltyFeeRate1);
-            } else if(currentTimestamp < user.lastDeposit.add(penaltyPeriod2)) {
-                withdrawFee = getWithdrawFee(_amount, penaltyFeeRate2);
-            }
-
-            uint256 amountExcludeWithdrawFee = _amount.sub(withdrawFee);
-            require(
-                withdrawFee < amountExcludeWithdrawFee,
-                "withdraw: fee exceeded"
-            );
             pool.lpToken.safeTransfer(
                 address(msg.sender),
-                amountExcludeWithdrawFee
+                _amount
             );
-            if (withdrawFee > 0) {
-                pool.lpToken.safeTransfer(address(penaltyAddress), withdrawFee);
-            }
         }
         user.rewardDebt = user.amount.mul(pool.accLEMAPerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
@@ -363,15 +361,10 @@ contract LemaChef is Ownable {
         emit EmergencyWithdraw(msg.sender, _pid, amount);
     }
 
-    // Update liquidity fee address by the previous liquidity fee address.
-    function updateLiqAddress(address _liqAddress) public {
-        require(msg.sender == liqAddress, "Updating LiqAddr Forbidden !");
-        liqAddress = _liqAddress;
-    }
-
-    // Update liq rate by the owner.
-    function updateLiqRate(uint16 _liqRate) public onlyOwner {
-        liqRate = _liqRate;
+    // Update treasury address by the previous treasury address holder.
+    function updateTreasuryAddress(address _treasury) public {
+        require(msg.sender == treasury, "Updating Treasury Forbidden !");
+        treasury = _treasury;
     }
 
     //Update perBlock amount
@@ -396,15 +389,7 @@ contract LemaChef is Ownable {
                 .div(1e12)
                 .sub(user.rewardDebt);
             if (pending > 0) {
-                uint256 liqFeeAmount = pending.mul(liqRate).div(100);
-                uint256 rewardAmount = pending.sub(liqFeeAmount);
-
-                require(
-                    pending == liqFeeAmount + rewardAmount,
-                    "Lema::transfer: Liq value invalid"
-                );
-                safeLEMATransfer(liqAddress, liqFeeAmount);
-                safeLEMATransfer(msg.sender, rewardAmount);
+                transferRewardWithWithdrawFee(user.lastDeposited, pending);
             }
         }
         if (_amount > 0) {
@@ -414,7 +399,8 @@ contract LemaChef is Ownable {
                 _amount
             );
             user.amount = user.amount.add(_amount);
-            user.lastDeposit = getLastDepositTimestamp(user.lastDeposit, user.lastDepositedAmount, _amount);
+            user.lastStakedDate = getLastDepositTimestamp(user.lastDeposited, user.lastDepositedAmount, _amount);
+            user.lastDeposited = block.timestamp;
             user.lastDepositedAmount = _amount;
 
         }
@@ -428,44 +414,18 @@ contract LemaChef is Ownable {
         UserInfo storage user = userInfo[0][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(0);
-
-        uint256 withdrawFee = 0;
         uint256 pending = user.amount.mul(pool.accLEMAPerShare).div(1e12).sub(
             user.rewardDebt
         );
         if (pending > 0) {
-            uint256 liqFeeAmount = pending.mul(liqRate).div(100);
-            uint256 rewardAmount = pending.sub(liqFeeAmount);
-
-            require(
-                pending == liqFeeAmount + rewardAmount,
-                "Lema::transfer: Liq value invalid"
-            );
-
-            safeLEMATransfer(liqAddress, liqFeeAmount);
-            safeLEMATransfer(msg.sender, rewardAmount);
+            transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
-
-            uint256 currentTimestamp = block.timestamp;
-            if (currentTimestamp < user.lastDeposit.add(penaltyPeriod1)) {
-                withdrawFee = getWithdrawFee(_amount, penaltyFeeRate1);
-            } else if(currentTimestamp < user.lastDeposit.add(penaltyPeriod2)) {
-                withdrawFee = getWithdrawFee(_amount, penaltyFeeRate2);
-            }
-            uint256 amountExcludeWithdrawFee = _amount.sub(withdrawFee);
-            require(
-                withdrawFee < amountExcludeWithdrawFee,
-                "withdraw: fee exceeded"
-            );
             pool.lpToken.safeTransfer(
                 address(msg.sender),
-                amountExcludeWithdrawFee
+                _amount
             );
-            if (withdrawFee > 0) {
-                pool.lpToken.safeTransfer(address(penaltyAddress), withdrawFee);
-            }
         }
         user.rewardDebt = user.amount.mul(pool.accLEMAPerShare).div(1e12);
         emit Withdraw(msg.sender, 0, _amount);
