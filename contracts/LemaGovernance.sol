@@ -83,9 +83,8 @@ contract LemaGovernance is LemaChef {
         LemaTokenVesting _lemaTokenVesting,
         LemaToken _lemaToken,
         address _treasury,
-        uint256 _lemaPerBlock,
         uint256 _startBlock
-    ) public LemaChef(_lemaToken, _treasury, _lemaPerBlock, _startBlock) {
+    ) public LemaChef(_lemaToken, _treasury, _startBlock) {
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
         lemaTokenVesting = _lemaTokenVesting;

@@ -20,19 +20,6 @@ module.exports = async function (deployer, network, accounts) {
     PresaleLemaRefundVault.address
   );
 
-  await deployer.deploy(
-    LemaTokenVesting,
-    LemaToken.address, // _lemaToken
-    accounts[0], // _initialLiquidity
-    accounts[1], // _privateSale
-    accounts[2], // _presale
-    accounts[3], // _marketing
-    accounts[4], // _stakingIncentiveDiscount
-    accounts[5], // _advisor
-    accounts[6], // _team
-    accounts[7] // _treasury
-  );
-
   let today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -46,8 +33,20 @@ module.exports = async function (deployer, network, accounts) {
     LemaTokenVesting.address, // _lemaTokenVesting
     LemaToken.address, // _lemaToken
     accounts[7], // _treasury
-    100, // _lemaPerBlock
     0 // _startBlock
+  );
+
+  await deployer.deploy(
+    LemaTokenVesting,
+    LemaToken.address, // _lemaToken
+    accounts[0], // _initialLiquidity
+    accounts[1], // _privateSale
+    accounts[2], // _presale
+    accounts[3], // _marketing
+    LemaGovernance.address, // _stakingIncentiveDiscount
+    accounts[5], // _advisor
+    accounts[6], // _team
+    accounts[7] // _treasury
   );
 
   const presaleLemaRefundVault = await PresaleLemaRefundVault.deployed();

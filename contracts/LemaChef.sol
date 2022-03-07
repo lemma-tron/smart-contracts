@@ -58,6 +58,8 @@ contract LemaChef is Ownable {
     uint256 public totalAllocPoint = 0;
     // The block number when mining starts.
     uint256 public startBlock;
+    // Estimated Total Blocks per year.
+    uint256 public blockPerYear = 31536000 / 5; // 1 year in seconds / 5 seconds(mean block time).
 
     // penalty fee when withdrawing reward within 4 weeks of last deposit and after 4 weeks
     uint256 public penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
@@ -85,24 +87,26 @@ contract LemaChef is Ownable {
     constructor(
         LemaToken _lemaToken,
         address _treasury,
-        uint256 _lemaPerBlock,
         uint256 _startBlock
     ) public {
         lemaToken = _lemaToken;
         treasury = _treasury;
-        lemaPerBlock = _lemaPerBlock;
+        // lemaPerBlock = _lemaPerBlock;
         startBlock = _startBlock;
+
+        uint256 _allocPoint = _lemaToken.balanceOf(address(this));
+        lemaPerBlock = (_allocPoint.mul(4)).div(blockPerYear);
 
         // staking pool
         poolInfo.push(
             PoolInfo({
                 lpToken: _lemaToken,
-                allocPoint: 1000,
+                allocPoint: _allocPoint,
                 lastRewardBlock: startBlock,
                 accLEMAPerShare: 0
             })
         );
-        totalAllocPoint = 1000;
+        totalAllocPoint = _allocPoint;
     }
 
     function updateMultiplier(uint256 multiplierNumber) public onlyOwner {
@@ -219,6 +223,23 @@ contract LemaChef is Ownable {
         }
     }
 
+    // To be called at the start of new 3 months tenure, after releasing the vested tokens to this contract.
+    function reallocPoint() public onlyOwner {
+        uint256 _allocPoint = lemaToken.balanceOf(address(this));
+        if (_allocPoint != poolInfo[0].allocPoint) {
+            poolInfo[0].allocPoint = _allocPoint;
+            lemaPerBlock = (_allocPoint.mul(4)).div(blockPerYear);
+        }
+
+        uint256 length = poolInfo.length;
+        uint256 points = 0;
+        for (uint256 pid = 1; pid < length; pid++) {
+            points = points.add(poolInfo[pid].allocPoint);
+        }
+
+        totalAllocPoint = _allocPoint.add(points);
+    }
+
     // View function to see pending Rewards.
     function pendingReward(uint256 _pid, address _user)
         external
@@ -256,30 +277,51 @@ contract LemaChef is Ownable {
     }
 
     // calculates last deposit timestamp for fair withdraw fee
-    function getLastDepositTimestamp(uint256 lastDepositedTimestamp, uint256 lastDepositedAmount, uint256 currentAmount) internal view returns (uint256) {
-        if(lastDepositedTimestamp <= 0) {
+    function getLastDepositTimestamp(
+        uint256 lastDepositedTimestamp,
+        uint256 lastDepositedAmount,
+        uint256 currentAmount
+    ) internal view returns (uint256) {
+        if (lastDepositedTimestamp <= 0) {
             return block.timestamp;
         } else {
             uint256 currentTimestamp = block.timestamp;
-            uint256 multiplier = currentAmount.div((lastDepositedAmount.add(currentAmount)));
-            return currentTimestamp.sub(lastDepositedTimestamp).mul(multiplier).add(lastDepositedTimestamp);
+            uint256 multiplier = currentAmount.div(
+                (lastDepositedAmount.add(currentAmount))
+            );
+            return
+                currentTimestamp
+                    .sub(lastDepositedTimestamp)
+                    .mul(multiplier)
+                    .add(lastDepositedTimestamp);
         }
     }
 
     // to fetch staked amount in given pool of given user
     // this can be used to know if user has staked or not
-    function getStakedAmountInPool(uint256 _pid, address _user) public view returns (uint256) {
+    function getStakedAmountInPool(uint256 _pid, address _user)
+        public
+        view
+        returns (uint256)
+    {
         UserInfo memory user = userInfo[_pid][_user];
         return user.amount;
     }
 
     // to fetch last staked date in given pool of given user
-    function getLastStakedDateInPool(uint256 _pid, address _user) public view returns (uint256) {
+    function getLastStakedDateInPool(uint256 _pid, address _user)
+        public
+        view
+        returns (uint256)
+    {
         UserInfo memory user = userInfo[_pid][_user];
         return user.lastStakedDate;
     }
 
-    function transferRewardWithWithdrawFee(uint256 userLastDeposited, uint256 pending) internal {
+    function transferRewardWithWithdrawFee(
+        uint256 userLastDeposited,
+        uint256 pending
+    ) internal {
         uint256 withdrawFee = 0;
         uint256 currentTimestamp = block.timestamp;
         if (currentTimestamp < userLastDeposited.add(penaltyPeriod)) {
@@ -290,7 +332,10 @@ contract LemaChef is Ownable {
 
         uint256 rewardAmount = pending.sub(withdrawFee);
 
-        require(pending == withdrawFee + rewardAmount, "Lema::transfer: withdrawfee invalid");
+        require(
+            pending == withdrawFee + rewardAmount,
+            "Lema::transfer: withdrawfee invalid"
+        );
 
         safeLEMATransfer(treasury, withdrawFee);
         safeLEMATransfer(msg.sender, rewardAmount);
@@ -319,7 +364,11 @@ contract LemaChef is Ownable {
                 _amount
             );
             user.amount = user.amount.add(_amount);
-            user.lastStakedDate = getLastDepositTimestamp(user.lastDeposited, user.lastDepositedAmount, _amount);
+            user.lastStakedDate = getLastDepositTimestamp(
+                user.lastDeposited,
+                user.lastDepositedAmount,
+                _amount
+            );
             user.lastDeposited = block.timestamp;
             user.lastDepositedAmount = _amount;
         }
@@ -343,17 +392,18 @@ contract LemaChef is Ownable {
         }
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
-            pool.lpToken.safeTransfer(
-                address(msg.sender),
-                _amount
-            );
+            pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
         user.rewardDebt = user.amount.mul(pool.accLEMAPerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
     // Get Withdraw fee
-    function getWithdrawFee(uint256 _amount, uint256 _penaltyFeeRate) internal pure returns (uint256) {
+    function getWithdrawFee(uint256 _amount, uint256 _penaltyFeeRate)
+        internal
+        pure
+        returns (uint256)
+    {
         return _amount.mul(_penaltyFeeRate).div(100);
     }
 
@@ -385,7 +435,10 @@ contract LemaChef is Ownable {
     }
 
     // update validator min stake
-    function updateValidatorMinStake(uint256 _validatorMinStake) public onlyOwner {
+    function updateValidatorMinStake(uint256 _validatorMinStake)
+        public
+        onlyOwner
+    {
         validatorMinStake = _validatorMinStake;
     }
 
@@ -395,7 +448,7 @@ contract LemaChef is Ownable {
         uint256 counter = 0;
         for (uint256 i = 0; i < validators.length; i++) {
             address user = validators[i];
-            if(validatorExists[user]) {
+            if (validatorExists[user]) {
                 validValidators[counter++] = user;
             }
         }
@@ -404,9 +457,15 @@ contract LemaChef is Ownable {
 
     // apply for validator
     function applyForValidator(address _user) public {
-        require(numberOfValidators <= numberOfValidatorAllowed, "Validators allowed exceeded");
+        require(
+            numberOfValidators <= numberOfValidatorAllowed,
+            "Validators allowed exceeded"
+        );
         uint256 lemaStaked = getStakedAmountInPool(0, _user);
-        require(lemaStaked >= validatorMinStake, "Stake not enough to become validator");
+        require(
+            lemaStaked >= validatorMinStake,
+            "Stake not enough to become validator"
+        );
         validatorExists[_user] = true;
         validators.push(_user);
         numberOfValidators += 1;
@@ -420,10 +479,13 @@ contract LemaChef is Ownable {
     }
 
     // update numberOfValidatorAllowed
-    function updateNumberOfValidatorAllowed(uint256 _numberOfValidatorAllowed) public onlyOwner {
+    function updateNumberOfValidatorAllowed(uint256 _numberOfValidatorAllowed)
+        public
+        onlyOwner
+    {
         numberOfValidatorAllowed = _numberOfValidatorAllowed;
     }
- 
+
     // Stake Lema tokens to LemaChef
     function enterStaking(uint256 _amount) public {
         PoolInfo storage pool = poolInfo[0];
@@ -446,10 +508,13 @@ contract LemaChef is Ownable {
                 _amount
             );
             user.amount = user.amount.add(_amount);
-            user.lastStakedDate = getLastDepositTimestamp(user.lastDeposited, user.lastDepositedAmount, _amount);
+            user.lastStakedDate = getLastDepositTimestamp(
+                user.lastDeposited,
+                user.lastDepositedAmount,
+                _amount
+            );
             user.lastDeposited = block.timestamp;
             user.lastDepositedAmount = _amount;
-
         }
         user.rewardDebt = user.amount.mul(pool.accLEMAPerShare).div(1e12);
         emit Deposit(msg.sender, 0, _amount);
@@ -468,17 +533,13 @@ contract LemaChef is Ownable {
             transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
         if (_amount > 0) {
-
             // check for validator
-            if(_amount > validatorMinStake) {
+            if (_amount > validatorMinStake) {
                 removeFromValidator(msg.sender);
             }
 
             user.amount = user.amount.sub(_amount);
-            pool.lpToken.safeTransfer(
-                address(msg.sender),
-                _amount
-            );
+            pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
         user.rewardDebt = user.amount.mul(pool.accLEMAPerShare).div(1e12);
         emit Withdraw(msg.sender, 0, _amount);
