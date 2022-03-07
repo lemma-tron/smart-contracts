@@ -9,8 +9,8 @@
 - [LEMA Token MasterChef](https://github.com/lemmatron/smart-contracts/blob/master/contracts/LemaChef.sol)
 - [LEMA Token Presale](https://github.com/lemmatron/smart-contracts/blob/master/contracts/PresaleLema.sol)
 
-- [LEMA Token PresaleV2](https://github.com/lemmatron/smart-contracts/blob/master/contracts/PresaleLemaV2.sol)
-- [LEMA Token Governance](https://github.com/lemmatron/smart-contracts/blob/master/contracts/LemaGovernance.sol)
+- [LEMA Token PresaleV2](https://github.com/lemma-tron/smart-contracts/blob/develop/contracts/PresaleLemaV2.sol)
+- [LEMA Token Governance](https://github.com/lemma-tron/smart-contracts/blob/develop/contracts/LemaGovernance.sol)
 
 ## To know more about Lemmatron:
 

@@ -2,10 +2,16 @@ const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaToken = artifacts.require("LemaToken");
 
 let lemaGovernanceInstance;
+let lemaTokenInstance;
 
 contract("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaTokenInstance = await LemaToken.deployed();
+    assert(
+      lemaTokenInstance !== undefined,
+      "LemaToken contract should be defined"
+    );
     return assert(
       lemaGovernanceInstance !== undefined,
       "LemaGovernance contract should be defined"
@@ -96,22 +102,30 @@ contract("LemaGovernance", function (accounts) {
 
   it("should not accept validators without minimum stake", async () => {
     try {
-      await lemaGovernanceInstance.applyForValidator(accounts[1]);
+      await lemaGovernanceInstance.applyForValidator({ from: accounts[1] });
       assert(false, "should have thrown");
     } catch (error) {
       assert.equal(error.reason, "Stake not enough to become validator");
     }
   });
 
-  it("should accept validators", async () => {
-    const lemaTokenInstance = await LemaToken.deployed();
+  it("should not accept validators from blocklist", async () => {
+    await lemaGovernanceInstance.addToBlocklist(accounts[1]);
+    try {
+      await lemaGovernanceInstance.applyForValidator({ from: accounts[1] });
+      assert(false, "should have thrown");
+    } catch (error) {
+      assert.equal(error.reason, "LemaGovernance: Blocklisted wallet");
+    }
+  });
 
+  it("should accept validators", async () => {
     await lemaTokenInstance.mint(accounts[0], 200);
     await lemaTokenInstance.approve(LemaGovernance.address, 200);
 
     await lemaGovernanceInstance.enterStaking(200);
 
-    await lemaGovernanceInstance.applyForValidator(accounts[0]);
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[0] });
 
     const validators = await lemaGovernanceInstance.getValidators();
     assert.equal(validators.length, 1);
@@ -129,8 +143,6 @@ contract("LemaGovernance", function (accounts) {
   });
 
   it("should let token holders delegate a validator", async () => {
-    const lemaTokenInstance = await LemaToken.deployed();
-
     await lemaTokenInstance.mint(accounts[2], 10);
 
     const validators = await lemaGovernanceInstance.getValidators();
@@ -158,6 +170,26 @@ contract("LemaGovernance", function (accounts) {
         "LemaGovernance: You have already delegated a validator"
       );
     }
+  });
+
+  it("should not have a validators's votes delegated to other validators", async () => {
+    await lemaTokenInstance.mint(accounts[2], 200);
+    await lemaTokenInstance.approve(LemaGovernance.address, 200, {
+      from: accounts[2],
+    });
+
+    await lemaGovernanceInstance.enterStaking(200, { from: accounts[2] });
+
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[2] });
+
+    const validatorExists = await lemaGovernanceInstance.validatorExists(
+      accounts[2]
+    );
+    assert.equal(validatorExists, true);
+
+    const delegatedValidator =
+      await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
+    assert.equal(delegatedValidator, false);
   });
 
   it("should let validator cast their vote", async () => {

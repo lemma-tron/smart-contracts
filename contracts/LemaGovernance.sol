@@ -2,11 +2,12 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./LemaChef.sol";
+import "./LemaChefV2.sol";
 import "./LemaTokenVesting.sol";
+import "./LemaVoters.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is LemaChef {
+contract LemaGovernance is LemaChefV2, LemaVoters {
     // Info of each project.
     struct Project {
         string name;
@@ -37,14 +38,6 @@ contract LemaGovernance is LemaChef {
     Governance[] public pastGovernances;
     Governance public currentGovernance;
 
-    // uint256 public minimumTokensRequiredToBeValidator;	// validatorMinStake
-    // address[] public validators;
-    // mapping(address => bool) public validValidators;	// validatorExists
-    mapping(address => bool) public haveCastedVotes;
-    mapping(address => bool) public haveDelagatedValidators;
-
-    mapping(address => address[]) public votedToValidators;
-
     LemaTokenVesting public lemaTokenVesting;
 
     modifier runningGovernanceOnly() {
@@ -69,14 +62,6 @@ contract LemaGovernance is LemaChef {
         _;
     }
 
-    modifier validValidatorsOnly() {
-        require(
-            validatorExists[msg.sender],
-            "LemaGovernance: Only validators can cast a vote"
-        );
-        _;
-    }
-
     constructor(
         uint256 _governanceVotingStart,
         uint256 _governanceVotingEnd,
@@ -84,7 +69,7 @@ contract LemaGovernance is LemaChef {
         LemaToken _lemaToken,
         address _treasury,
         uint256 _startBlock
-    ) public LemaChef(_lemaToken, _treasury, _startBlock) {
+    ) public LemaChefV2(_lemaToken, _treasury, _startBlock) {
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
         lemaTokenVesting = _lemaTokenVesting;
@@ -113,12 +98,14 @@ contract LemaGovernance is LemaChef {
         return currentGovernance.projects;
     }
 
-    function getVoters() public view returns (address[] memory) {
+    function getVoters()
+        public
+        view
+        virtual
+        override
+        returns (address[] memory)
+    {
         return currentGovernance.voters;
-    }
-
-    function getValidators() public view returns (address[] memory) {
-        return listOfValidators();
     }
 
     function addProject(
@@ -163,6 +150,8 @@ contract LemaGovernance is LemaChef {
 
     function delegateValidator(address validator)
         public
+        virtual
+        override
         runningGovernanceOnly
         validVotersOnly
     {
@@ -175,12 +164,41 @@ contract LemaGovernance is LemaChef {
             "LemaGovernance: Validator is not a valid"
         );
 
-        votedToValidators[validator].push(msg.sender);
+        votedToValidator[msg.sender] = validator;
         haveDelagatedValidators[msg.sender] = true;
+        voteCount[validator] += 1;
         currentGovernance.voters.push(msg.sender);
     }
 
-    function castVote(uint256 index) public validValidatorsOnly {
+    function applyForValidator() public virtual override {
+        if (haveDelagatedValidators[msg.sender]) {
+            voteCount[votedToValidator[msg.sender]] -= 1;
+
+            delete votedToValidator[msg.sender];
+            delete haveDelagatedValidators[msg.sender];
+
+            for (
+                uint256 index = 0;
+                index < currentGovernance.validators.length;
+                index++
+            ) {
+                if (currentGovernance.validators[index] == msg.sender) {
+                    currentGovernance.validators[index] = currentGovernance
+                        .validators[currentGovernance.validators.length - 1];
+                    currentGovernance.validators.pop();
+                    break;
+                }
+            }
+        }
+        super.applyForValidator();
+    }
+
+    function castVote(uint256 index)
+        public
+        virtual
+        override
+        validValidatorsOnly
+    {
         require(
             !haveCastedVotes[msg.sender],
             "LemaGovernance: You have already voted"
