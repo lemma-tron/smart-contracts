@@ -4,10 +4,9 @@ pragma experimental ABIEncoderV2;
 
 import "./LemaChefV2.sol";
 import "./LemaTokenVesting.sol";
-import "./LemaVoters.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is LemaChefV2, LemaVoters {
+contract LemaGovernance is LemaChefV2 {
     // Info of each project.
     struct Project {
         string name;
@@ -50,14 +49,6 @@ contract LemaGovernance is LemaChefV2, LemaVoters {
             block.timestamp >= currentGovernance.governanceVotingStart &&
                 currentGovernance.governanceVotingStart != 0,
             "LemaGovernance: Voitng hasn't started yet"
-        );
-        _;
-    }
-
-    modifier validVotersOnly() {
-        require(
-            lemaToken.balanceOf(msg.sender) > 0,
-            "LemaGovernance: Only token holders can vote"
         );
         _;
     }
@@ -153,20 +144,8 @@ contract LemaGovernance is LemaChefV2, LemaVoters {
         virtual
         override
         runningGovernanceOnly
-        validVotersOnly
     {
-        require(
-            !haveDelagatedValidators[msg.sender],
-            "LemaGovernance: You have already delegated a validator"
-        );
-        require(
-            validatorExists[validator],
-            "LemaGovernance: Validator is not a valid"
-        );
-
-        votedToValidator[msg.sender] = validator;
-        haveDelagatedValidators[msg.sender] = true;
-        voteCount[validator] += 1;
+        super.delegateValidator(validator);
         currentGovernance.voters.push(msg.sender);
     }
 

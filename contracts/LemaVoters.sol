@@ -8,5 +8,12 @@ abstract contract LemaVoters {
 
     function getVoters() public view virtual returns (address[] memory);
 
-    function delegateValidator(address validator) public virtual;
+    function delegateValidator(address validator) public virtual {
+        require(
+            !haveDelagatedValidators[msg.sender],
+            "LemaGovernance: You have already delegated a validator"
+        );
+        votedToValidator[msg.sender] = validator;
+        haveDelagatedValidators[msg.sender] = true;
+    }
 }

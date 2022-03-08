@@ -8,9 +8,10 @@ import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
 
 import "./LemaToken.sol";
 import "./LemaValidators.sol";
+import "./LemaVoters.sol";
 
 // Master Contract of Lemmatron
-abstract contract LemaChefV2 is Ownable, LemaValidators {
+abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -18,7 +19,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators {
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
-        uint256 lastStakedDate; // last staked timestamp
+        uint256 lastStakedDate; // quasi-last staked date
         uint256 lastDeposited; // last deposited timestamp
         uint256 lastDepositedAmount; // last deposited amount
         //
@@ -284,8 +285,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators {
                 (lastDepositedAmount.add(currentAmount))
             );
             return
-                currentTimestamp
-                    .sub(lastDepositedTimestamp)
+                (currentTimestamp.sub(lastDepositedTimestamp))
                     .mul(multiplier)
                     .add(lastDepositedTimestamp);
         }
@@ -371,21 +371,29 @@ abstract contract LemaChefV2 is Ownable, LemaValidators {
         emit Deposit(msg.sender, _pid, _amount);
     }
 
-    function applyForValidator() public virtual override(LemaValidators) {
-        require(!blocklisted[msg.sender], "LemaGovernance: Blocklisted wallet");
-        require(
-            numberOfValidators <= numberOfValidatorAllowed,
-            "Validators allowed exceeded"
-        );
+    function applyForValidator() public virtual override {
+        super.applyForValidator();
         uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
         require(
             lemaStaked >= validatorMinStake,
             "Stake not enough to become validator"
         );
+    }
 
-        validatorExists[msg.sender] = true;
-        validators.push(msg.sender);
-        numberOfValidators += 1;
+    function delegateValidator(address validator)
+        public
+        virtual
+        override(LemaValidators, LemaVoters)
+    {
+        require(
+            validatorExists[validator],
+            "LemaGovernance: Validator is not a valid"
+        );
+        LemaVoters.delegateValidator(validator);
+        LemaValidators.delegateValidator(validator);
+
+        uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
+        require(lemaStaked > 0, "LemaChefV2: Stake not enough to vote");
     }
 
     // Withdraw LP tokens from LemaChef.

@@ -138,12 +138,16 @@ contract("LemaGovernance", function (accounts) {
       });
       assert(false, "should have thrown");
     } catch (error) {
-      assert.equal(error.reason, "LemaGovernance: Only token holders can vote");
+      assert.equal(error.reason, "LemaChefV2: Stake not enough to vote");
     }
   });
 
   it("should let token holders delegate a validator", async () => {
     await lemaTokenInstance.mint(accounts[2], 10);
+    await lemaTokenInstance.approve(LemaGovernance.address, 10, {
+      from: accounts[2],
+    });
+    await lemaGovernanceInstance.enterStaking(10, { from: accounts[2] });
 
     const validators = await lemaGovernanceInstance.getValidators();
 
@@ -154,6 +158,9 @@ contract("LemaGovernance", function (accounts) {
     const delegatedValidator =
       await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
     assert.equal(delegatedValidator, true);
+
+    const voteCount = await lemaGovernanceInstance.voteCount(validators[0]);
+    assert.equal(voteCount.toNumber(), 1);
   });
 
   it("should not let a token holders delegate a validator twice", async () => {

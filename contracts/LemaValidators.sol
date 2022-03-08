@@ -50,7 +50,17 @@ abstract contract LemaValidators is Ownable {
     }
 
     // apply for validator
-    function applyForValidator() public virtual;
+    function applyForValidator() public virtual {
+        require(!blocklisted[msg.sender], "LemaGovernance: Blocklisted wallet");
+        require(
+            numberOfValidators <= numberOfValidatorAllowed,
+            "Validators allowed exceeded"
+        );
+
+        validatorExists[msg.sender] = true;
+        validators.push(msg.sender);
+        numberOfValidators += 1;
+    }
 
     // remove for validator
     function removeFromValidator(address _user) public {
@@ -73,5 +83,9 @@ abstract contract LemaValidators is Ownable {
 
     function removeFromBlocklist(address _user) public {
         blocklisted[_user] = false;
+    }
+
+    function delegateValidator(address validator) public virtual {
+        voteCount[validator] += 1;
     }
 }
