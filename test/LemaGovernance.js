@@ -8,22 +8,13 @@ contract("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
     lemaTokenInstance = await LemaToken.deployed();
-    assert(
-      lemaTokenInstance !== undefined,
-      "LemaToken contract should be defined"
-    );
-    return assert(
-      lemaGovernanceInstance !== undefined,
-      "LemaGovernance contract should be defined"
-    );
+    assert(lemaTokenInstance !== undefined, "LemaToken contract should be defined");
+    return assert(lemaGovernanceInstance !== undefined, "LemaGovernance contract should be defined");
   });
 
   it("should have treasury address", async () => {
     const treasuryAddress = await lemaGovernanceInstance.treasury();
-    return assert(
-      treasuryAddress === accounts[7],
-      "Treasury address should be defined"
-    );
+    return assert(treasuryAddress === accounts[7], "Treasury address should be defined");
   });
 
   // it("should let new governance to be started", async () => {
@@ -155,12 +146,12 @@ contract("LemaGovernance", function (accounts) {
       from: accounts[2],
     });
 
-    const delegatedValidator =
-      await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
+    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
     assert.equal(delegatedValidator, true);
 
     const voteCount = await lemaGovernanceInstance.voteCount(validators[0]);
-    assert.equal(voteCount.toNumber(), 1);
+    // console.log("Vote Count:", voteCount.toString());  // 10000000000000000
+    assert.equal(voteCount.toString(), "10000000000000000"); // 1e16 as 1e15 base multiplier x 10 tokens x 0 days
   });
 
   it("should not let a token holders delegate a validator twice", async () => {
@@ -172,10 +163,7 @@ contract("LemaGovernance", function (accounts) {
       });
       assert(false, "should have thrown");
     } catch (error) {
-      assert.equal(
-        error.reason,
-        "LemaGovernance: You have already delegated a validator"
-      );
+      assert.equal(error.reason, "LemaGovernance: You have already delegated a validator");
     }
   });
 
@@ -189,22 +177,17 @@ contract("LemaGovernance", function (accounts) {
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[2] });
 
-    const validatorExists = await lemaGovernanceInstance.validatorExists(
-      accounts[2]
-    );
+    const validatorExists = await lemaGovernanceInstance.validatorExists(accounts[2]);
     assert.equal(validatorExists, true);
 
-    const delegatedValidator =
-      await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
+    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
     assert.equal(delegatedValidator, false);
   });
 
   it("should let validator cast their vote", async () => {
     await lemaGovernanceInstance.castVote(0);
 
-    const haveCastedVote = await lemaGovernanceInstance.haveCastedVotes(
-      accounts[0]
-    );
+    const haveCastedVote = await lemaGovernanceInstance.haveCastedVotes(accounts[0]);
     assert.equal(haveCastedVote, true);
   });
 

@@ -6,6 +6,8 @@ import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
 import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
 import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
 
+import "./lib/VotingPower.sol";
+
 import "./LemaToken.sol";
 import "./LemaValidators.sol";
 import "./LemaVoters.sol";
@@ -312,6 +314,18 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         return user.lastStakedDate;
     }
 
+    // to fetch if user is LP Token Staker or not
+    function multiPoolOrNot(address _user) public view returns (bool) {
+        uint256 length = poolInfo.length;
+        for (uint256 pid = 1; pid < length; pid++) {
+            UserInfo memory user = userInfo[pid][_user];
+            if (user.amount > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function transferRewardWithWithdrawFee(
         uint256 userLastDeposited,
         uint256 pending
@@ -383,17 +397,29 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     function delegateValidator(address validator)
         public
         virtual
-        override(LemaValidators, LemaVoters)
+        override(LemaVoters)
     {
         require(
             validatorExists[validator],
             "LemaGovernance: Validator is not a valid"
         );
         LemaVoters.delegateValidator(validator);
-        LemaValidators.delegateValidator(validator);
 
         uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
         require(lemaStaked > 0, "LemaChefV2: Stake not enough to vote");
+
+        uint256 lastLemaStakedDate = getLastStakedDateInPool(0, msg.sender);
+        uint256 numberOfDaysStaked = block
+            .timestamp
+            .sub(lastLemaStakedDate)
+            .div(86400);
+        bool multiPool = multiPoolOrNot(msg.sender);
+        uint256 votingPower = VotingPower.calculate(
+            numberOfDaysStaked,
+            lemaStaked,
+            multiPool
+        );
+        LemaValidators.vestVotes(validator, votingPower);
     }
 
     // Withdraw LP tokens from LemaChef.

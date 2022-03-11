@@ -85,7 +85,11 @@ abstract contract LemaValidators is Ownable {
         blocklisted[_user] = false;
     }
 
-    function delegateValidator(address validator) public virtual {
-        voteCount[validator] += 1;
+    function vestVotes(address validator, uint256 votingPower) internal {
+        voteCount[validator] += votingPower;
     }
+
+    // function delegateValidator(address validator) public virtual {
+    //     voteCount[validator] += 1;
+    // }
 }
