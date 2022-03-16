@@ -1,5 +1,3 @@
-const { assert } = require("chai");
-
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const LemaToken = artifacts.require("LemaToken");
@@ -9,10 +7,7 @@ let lemaStakingInstance;
 contract("LemaStaking", function (accounts) {
   it("should assert true", async () => {
     lemaStakingInstance = await LemaGovernance.deployed();
-    return assert(
-      lemaStakingInstance !== undefined,
-      "LemaGovernance contract should be defined"
-    );
+    return assert(lemaStakingInstance !== undefined, "LemaGovernance contract should be defined");
   });
 
   it("should have balance", async () => {
@@ -22,7 +17,6 @@ contract("LemaStaking", function (accounts) {
     await lemaTokenVesting.createStakingIncentiveDiscountVesting();
 
     const totalSupply = await lemaToken.cap();
-    // console.log("totalSupply", totalSupply.toString());  // 10000000000000000000000000000
 
     await lemaToken.mint(lemaTokenVesting.address, totalSupply.toString());
 
@@ -36,7 +30,6 @@ contract("LemaStaking", function (accounts) {
     await lemaStakingInstance.reallocPoint();
 
     const totalAllocPoint = await lemaStakingInstance.totalAllocPoint();
-    // console.log("totalAllocPoint", totalAllocPoint.toString());
 
     assert.equal(totalAllocPoint.toString(), "100000000000000000000000000");
   });

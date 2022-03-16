@@ -5,10 +5,7 @@ let preSaleLemaV2Instance;
 contract("PresaleLemaV2", function (accounts) {
   it("should assert true", async () => {
     preSaleLemaV2Instance = await PresaleLemaV2.deployed();
-    return assert(
-      preSaleLemaV2Instance !== undefined,
-      "PresaleLemaV2 contract should be defined"
-    );
+    return assert(preSaleLemaV2Instance !== undefined, "PresaleLemaV2 contract should be defined");
   });
 
   it("should have 0 tokens raised", async () => {
@@ -43,15 +40,11 @@ contract("PresaleLemaV2", function (accounts) {
       gas: 1000000,
     });
     const tokensRaisedAfter = await preSaleLemaV2Instance.tokensRaised();
-    return assert.isTrue(
-      tokensRaisedInitially.toNumber() < tokensRaisedAfter.toNumber()
-    );
+    return assert.isTrue(tokensRaisedInitially.toNumber() < tokensRaisedAfter.toNumber());
   });
 
   it("should assign bought tokens to buyer", async () => {
-    const balance = await preSaleLemaV2Instance.tokenToBeTransferred(
-      accounts[0]
-    );
+    const balance = await preSaleLemaV2Instance.tokenToBeTransferred(accounts[0]);
     return assert.equal(balance.toNumber(), 1);
   });
 });

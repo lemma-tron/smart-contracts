@@ -17,16 +17,6 @@ contract("LemaGovernance", function (accounts) {
     return assert(treasuryAddress === accounts[7], "Treasury address should be defined");
   });
 
-  // it("should let new governance to be started", async () => {
-  //   await lemaGovernanceInstance.startNewGovernance();
-
-  //   const pastGovernances = await lemaGovernanceInstance.getPastGovernances();
-  //   return assert(
-  //     pastGovernances.length === 1,
-  //     "There should be one governance"
-  //   );
-  // });
-
   it("should not have any projects", async () => {
     const projects = await lemaGovernanceInstance.getProjects();
     return assert(projects.length === 0, "There should not be any project");

@@ -67,12 +67,6 @@ contract LemaGovernance is LemaChefV2 {
     }
 
     function startNewGovernance() public onlyOwner {
-        // require(
-        //     currentGovernance.governanceVotingEnd <= block.timestamp &&
-        //         currentGovernance.governanceVotingEnd != 0,
-        //     "Governance voting hasn't ended yet"
-        // );
-
         currentGovernance.validators = listOfValidators();
         pastGovernances.push(currentGovernance);
         delete currentGovernance;
