@@ -23,8 +23,6 @@ library VotingPower {
 
         if (d == 0) return eD;
 
-        uint256 eP = tv.sub(d).div(m); // e power
-
         /*
          *    𝛼 = 1 + (1/(1 + 𝑒^eP))/4 as eP = (−𝑑+𝑡𝑣)/𝑚
          *    𝛼 = 1 + (1/(1 + (eN^eP/eD^eP))/4
@@ -36,7 +34,14 @@ library VotingPower {
          *    eD + (eD**(eP + 1)) / (4 * (eD**eP + eN**eP));
          */
 
-        return eD + (eD**(eP + 1)) / (4 * (eD**eP + eN**eP));
+        if (tv > d) {
+            uint256 eP = tv.sub(d).div(m); // e power
+            return eD + (eD**(eP + 1)) / (4 * (eD**eP + eN**eP));
+        } else {
+            // (eN/eD)^(-eP) = (eD/eN)^eP
+            uint256 eP = d.sub(tv).div(m); // e power
+            return eD + (eN**(eP + 1)) / (4 * (eN**eP + eD**eP));
+        }
     }
 
     function calculate(
