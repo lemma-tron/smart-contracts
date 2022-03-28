@@ -12,13 +12,7 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(LemaToken, accounts[0]);
   await deployer.deploy(PresaleLemaRefundVault, accounts[0], BEP20.address);
 
-  await deployer.deploy(
-    PresaleLemaV2,
-    LemaToken.address,
-    BEP20.address,
-    accounts[0],
-    PresaleLemaRefundVault.address
-  );
+  await deployer.deploy(PresaleLemaV2, LemaToken.address, BEP20.address, accounts[0], PresaleLemaRefundVault.address);
 
   let today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -30,7 +24,6 @@ module.exports = async function (deployer, network, accounts) {
     LemaGovernance,
     startDate, // _governanceVotingStart
     endDate, // _governanceVotingEnd
-    LemaTokenVesting.address, // _lemaTokenVesting
     LemaToken.address, // _lemaToken
     accounts[7], // _treasury
     0 // _startBlock
@@ -54,8 +47,5 @@ module.exports = async function (deployer, network, accounts) {
 
   await presaleLemaRefundVault.transferOwnership(PresaleLemaV2.address);
 
-  await busd.approve(
-    PresaleLemaRefundVault.address,
-    "1000000000000000000000000"
-  );
+  await busd.approve(PresaleLemaRefundVault.address, "1000000000000000000000000");
 };

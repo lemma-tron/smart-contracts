@@ -3,7 +3,6 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./LemaChefV2.sol";
-import "./LemaTokenVesting.sol";
 
 // Governance contract of Lemmatrom
 contract LemaGovernance is LemaChefV2 {
@@ -37,8 +36,6 @@ contract LemaGovernance is LemaChefV2 {
     Governance[] public pastGovernances;
     Governance public currentGovernance;
 
-    LemaTokenVesting public lemaTokenVesting;
-
     modifier runningGovernanceOnly() {
         require(
             currentGovernance.governanceVotingEnd == 0 ||
@@ -56,14 +53,12 @@ contract LemaGovernance is LemaChefV2 {
     constructor(
         uint256 _governanceVotingStart,
         uint256 _governanceVotingEnd,
-        LemaTokenVesting _lemaTokenVesting,
         LemaToken _lemaToken,
         address _treasury,
         uint256 _startBlock
     ) public LemaChefV2(_lemaToken, _treasury, _startBlock) {
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
-        lemaTokenVesting = _lemaTokenVesting;
     }
 
     function startNewGovernance() public onlyOwner {
