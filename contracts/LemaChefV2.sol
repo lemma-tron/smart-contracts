@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
 import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
@@ -115,6 +116,10 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
         //Determine how many pools we have
+    }
+
+    function getPools() external view returns (PoolInfo[] memory) {
+        return poolInfo;
     }
 
     // Return reward multiplier over the given _from to _to block.
