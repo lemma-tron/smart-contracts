@@ -213,3 +213,34 @@ contract("LemaGovernance", function (accounts) {
     assert.equal(winningVoteCount, 1);
   });
 });
+
+contract("LemaGovernance: Slashing", function (accounts) {
+  it("should assert true", async () => {
+    lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaTokenInstance = await LemaToken.deployed();
+    assert(lemaTokenInstance !== undefined, "LemaToken contract should be defined");
+    return assert(lemaGovernanceInstance !== undefined, "LemaGovernance contract should be defined");
+  });
+
+  it("add a stimulated offline validator", async () => {
+    await lemaTokenInstance.mint(accounts[6], 200);
+    await lemaTokenInstance.approve(LemaGovernance.address, 200, { from: accounts[6] });
+
+    await lemaGovernanceInstance.enterStaking(200, { from: accounts[6] });
+
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[6] });
+
+    const validators = await lemaGovernanceInstance.getValidators();
+    assert(validators.length > 0);
+
+    const haveCastedVotes = await lemaGovernanceInstance.haveCastedVotes(accounts[6]);
+    assert.equal(haveCastedVotes, false);
+
+    const initialStakedAmount = await lemaGovernanceInstance.getStakedAmountInPool(0, accounts[6]);
+    await lemaGovernanceInstance.startNewGovernance();
+    const finalStakedAmount = await lemaGovernanceInstance.getStakedAmountInPool(0, accounts[6]);
+    // assert(finalStakedAmount < initialStakedAmount);
+    assert.equal(initialStakedAmount.toString(), "200");
+    assert.equal(finalStakedAmount.toString(), "186");
+  });
+});

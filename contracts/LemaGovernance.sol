@@ -2,10 +2,14 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
+import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
+
 import "./LemaChefV2.sol";
 
 // Governance contract of Lemmatrom
 contract LemaGovernance is LemaChefV2 {
+    using SafeMath for uint256;
+
     // Info of each project.
     struct Project {
         string name;
@@ -62,7 +66,42 @@ contract LemaGovernance is LemaChefV2 {
     }
 
     function startNewGovernance() public onlyOwner {
-        currentGovernance.validators = listOfValidators();
+        // Slashing
+        // Offline Validator
+        address[] memory currentValidators = listOfValidators();
+        address[] memory offlineValidators = new address[](numberOfValidators);
+        uint256 numberOfOfflineValidators = 0;
+        for (uint256 i = 0; i < currentValidators.length; i++) {
+            address user = validators[i];
+            if (!haveCastedVotes[user]) {
+                offlineValidators[numberOfOfflineValidators++] = user;
+            }
+        }
+
+        uint256 x = offlineValidators.length.mul(100);
+        uint256 n = currentValidators.length.mul(100);
+        uint256 slashingParameter = x.sub(n.div(50)).mul(4).div(n.div(100));
+
+        if (slashingParameter > 0) {
+            if (slashingParameter > 100) {
+                slashingParameter = 100;
+            }
+            for (uint256 i = 0; i < numberOfOfflineValidators; i++) {
+                address user = offlineValidators[i];
+                uint256 userStake = getStakedAmountInPool(0, user);
+                uint256 toBeSlashedAmount = userStake
+                    .mul(7)
+                    .mul(slashingParameter)
+                    .div(10000);
+
+                safeLEMATransfer(treasury, toBeSlashedAmount);
+
+                UserInfo storage userData = userInfo[0][user];
+                userData.amount = userData.amount.sub(toBeSlashedAmount);
+            }
+        }
+
+        currentGovernance.validators = currentValidators;
         pastGovernances.push(currentGovernance);
         delete currentGovernance;
 
