@@ -41,7 +41,8 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     // Info of each pool.
     struct PoolInfo {
         IBEP20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. LEMAs to distribute per block.
+        // uint256 allocPoint; // How many allocation points assigned to this pool. LEMAs to distribute per block.
+        uint256 allocPoint; // Considering 1000 for equal share as other pools
         uint256 lastRewardBlock; // Last block number that LEMAs distribution occurs.
         uint256 accLEMAPerShare; // Accumulated LEMAs per share, times 1e12. See below.
     }
@@ -92,19 +93,16 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         // lemaPerBlock = _lemaPerBlock;
         startBlock = _startBlock;
 
-        uint256 _allocPoint = _lemaToken.balanceOf(address(this));
-        lemaPerBlock = (_allocPoint.mul(4)).div(blockPerYear);
-
         // staking pool
         poolInfo.push(
             PoolInfo({
                 lpToken: _lemaToken,
-                allocPoint: _allocPoint,
+                allocPoint: 1000,
                 lastRewardBlock: startBlock,
                 accLEMAPerShare: 0
             })
         );
-        totalAllocPoint = _allocPoint;
+        totalAllocPoint = 1000;
     }
 
     function updateMultiplier(uint256 multiplierNumber) public onlyOwner {
@@ -226,20 +224,12 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // To be called at the start of new 3 months tenure, after releasing the vested tokens to this contract.
-    function reallocPoint() public onlyOwner {
-        uint256 _allocPoint = lemaToken.balanceOf(address(this));
-        if (_allocPoint != poolInfo[0].allocPoint) {
-            poolInfo[0].allocPoint = _allocPoint;
-            lemaPerBlock = (_allocPoint.mul(4)).div(blockPerYear);
+    function reallocPoint(bool _withUpdate) public onlyOwner {
+        if (_withUpdate) {
+            massUpdatePools();
         }
-
-        uint256 length = poolInfo.length;
-        uint256 points = 0;
-        for (uint256 pid = 1; pid < length; pid++) {
-            points = points.add(poolInfo[pid].allocPoint);
-        }
-
-        totalAllocPoint = _allocPoint.add(points);
+        uint256 totalAvailableLEMA = lemaToken.balanceOf(address(this));
+        lemaPerBlock = (totalAvailableLEMA.mul(4)).div(blockPerYear);
     }
 
     // View function to see pending Rewards.
