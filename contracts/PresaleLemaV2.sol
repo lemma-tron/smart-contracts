@@ -17,12 +17,12 @@ contract PresaleLemaV2 is Ownable {
     PresaleLemaRefundVault public vault;
 
     // The block number of when the presale starts
-    // Feb 23rd 2022, 12 am (UTC)
-    uint256 public startTime = 1645574400;
+    // Apr 6th 2022, 12 am (UTC)
+    uint256 public startTime = 1649203200;
 
     // The block number of when the presale ends
-    // Apr 09th 2022, 12 am (UTC)
-    uint256 public endTime = 1649462400;
+    // May 21st 2022, 12 am (UTC)
+    uint256 public endTime = 1653091200;
 
     uint256 public startingPrice = 0.00005 ether;
     uint256 public closingPrice = 0.00010 ether;

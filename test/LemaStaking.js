@@ -26,11 +26,11 @@ contract("LemaStaking", function (accounts) {
     assert.equal(balance.toString(), "100000000000000000000000000");
   });
 
-  it("should have totalAllocPoint", async () => {
-    await lemaStakingInstance.reallocPoint();
+  // it("should have totalAllocPoint", async () => {
+  //   await lemaStakingInstance.reallocPoint();
 
-    const totalAllocPoint = await lemaStakingInstance.totalAllocPoint();
+  //   const totalAllocPoint = await lemaStakingInstance.totalAllocPoint();
 
-    assert.equal(totalAllocPoint.toString(), "100000000000000000000000000");
-  });
+  //   assert.equal(totalAllocPoint.toString(), "100000000000000000000000000");
+  // });
 });
