@@ -259,7 +259,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         //getting the accumulated lema per share in that pool
         uint256 accLEMAPerShare = 0;
         uint256 lemaPerBlock = 0;
-        if (validatorExists[_user]) {
+        if (getValidatorsExists(_user)) {
             accLEMAPerShare = pool.accLEMAPerShareForValidator;
             lemaPerBlock = lemaPerBlockForValidator;
         } else {
@@ -374,7 +374,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         view
         returns (uint256)
     {
-        if (validatorExists[msg.sender]) {
+        if (getValidatorsExists(msg.sender)) {
             return pool.accLEMAPerShareForValidator;
         } else {
             return pool.accLEMAPerShareForNominator;
@@ -420,7 +420,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         super.applyForValidator();
         uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
         require(
-            lemaStaked >= validatorMinStake,
+            lemaStaked >= getValidatorsMinStake(),
             "Stake not enough to become validator"
         );
     }
@@ -431,7 +431,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         override(LemaVoters)
     {
         require(
-            validatorExists[validator],
+            getValidatorsExists(validator),
             "LemaGovernance: Validator is not a valid"
         );
         LemaVoters.delegateValidator(validator);
@@ -573,7 +573,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         }
         if (_amount > 0) {
             // check for validator
-            if (_amount > validatorMinStake) {
+            if (_amount > getValidatorsMinStake()) {
                 removeFromValidator(msg.sender);
             }
 

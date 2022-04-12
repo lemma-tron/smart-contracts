@@ -68,15 +68,9 @@ contract LemaGovernance is LemaChefV2 {
     function startNewGovernance() public onlyOwner {
         // Slashing
         // Offline Validator
-        address[] memory currentValidators = listOfValidators();
-        address[] memory offlineValidators = new address[](numberOfValidators);
-        uint256 numberOfOfflineValidators = 0;
-        for (uint256 i = 0; i < currentValidators.length; i++) {
-            address user = validators[i];
-            if (!haveCastedVotes[user]) {
-                offlineValidators[numberOfOfflineValidators++] = user;
-            }
-        }
+        address[] memory currentValidators = getValidators();
+        address[]
+            memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
 
         uint256 x = offlineValidators.length.mul(100);
         uint256 n = currentValidators.length.mul(100);
@@ -86,7 +80,7 @@ contract LemaGovernance is LemaChefV2 {
             if (slashingParameter > 100) {
                 slashingParameter = 100;
             }
-            for (uint256 i = 0; i < numberOfOfflineValidators; i++) {
+            for (uint256 i = 0; i < offlineValidators.length; i++) {
                 address user = offlineValidators[i];
                 uint256 userStake = getStakedAmountInPool(0, user);
                 uint256 toBeSlashedAmount = userStake
@@ -170,11 +164,10 @@ contract LemaGovernance is LemaChefV2 {
     }
 
     function applyForValidator() public virtual override {
-        if (haveDelagatedValidators[msg.sender]) {
-            voteCount[votedToValidator[msg.sender]] -= 1;
+        if (haveDelagatedValidator(msg.sender)) {
+            withdrawVotes(getVotedToValidator(msg.sender));
 
-            delete votedToValidator[msg.sender];
-            delete haveDelagatedValidators[msg.sender];
+            unDelegateValidator();
 
             for (
                 uint256 index = 0;
@@ -192,14 +185,9 @@ contract LemaGovernance is LemaChefV2 {
         super.applyForValidator();
     }
 
-    function castVote(uint256 index)
-        public
-        virtual
-        override
-        validValidatorsOnly
-    {
+    function castVote(uint256 index) public validValidatorsOnly {
         require(
-            !haveCastedVotes[msg.sender],
+            !haveCastedVote(msg.sender),
             "LemaGovernance: You have already voted"
         );
         require(
@@ -212,7 +200,7 @@ contract LemaGovernance is LemaChefV2 {
             "LemaGovernance: Project is not approved yet"
         );
         project.validatorVoters.push(msg.sender);
-        haveCastedVotes[msg.sender] = true;
+        updateCastedVote(true);
     }
 
     function rewardMostVotedProject() public onlyOwner runningGovernanceOnly {

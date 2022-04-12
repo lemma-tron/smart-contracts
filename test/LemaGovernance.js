@@ -136,10 +136,10 @@ contract("LemaGovernance", function (accounts) {
       from: accounts[2],
     });
 
-    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
+    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidator(accounts[2]);
     assert.equal(delegatedValidator, true);
 
-    const voteCount = await lemaGovernanceInstance.voteCount(validators[0]);
+    const voteCount = await lemaGovernanceInstance.getVoteCount(validators[0]);
     // console.log("Vote Count:", voteCount.toString());  // 10000000000000000
     assert.equal(voteCount.toString(), "10000000000000000"); // 1e16 as 1e15 base multiplier x 10 tokens x 0 days
   });
@@ -167,17 +167,17 @@ contract("LemaGovernance", function (accounts) {
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[2] });
 
-    const validatorExists = await lemaGovernanceInstance.validatorExists(accounts[2]);
+    const validatorExists = await lemaGovernanceInstance.getValidatorsExists(accounts[2]);
     assert.equal(validatorExists, true);
 
-    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidators(accounts[2]);
+    const delegatedValidator = await lemaGovernanceInstance.haveDelagatedValidator(accounts[2]);
     assert.equal(delegatedValidator, false);
   });
 
   it("should let validator cast their vote", async () => {
     await lemaGovernanceInstance.castVote(0);
 
-    const haveCastedVote = await lemaGovernanceInstance.haveCastedVotes(accounts[0]);
+    const haveCastedVote = await lemaGovernanceInstance.haveCastedVote(accounts[0]);
     assert.equal(haveCastedVote, true);
   });
 
@@ -233,8 +233,8 @@ contract("LemaGovernance: Slashing", function (accounts) {
     const validators = await lemaGovernanceInstance.getValidators();
     assert(validators.length > 0);
 
-    const haveCastedVotes = await lemaGovernanceInstance.haveCastedVotes(accounts[6]);
-    assert.equal(haveCastedVotes, false);
+    const haveCastedVote = await lemaGovernanceInstance.haveCastedVote(accounts[6]);
+    assert.equal(haveCastedVote, false);
 
     const initialStakedAmount = await lemaGovernanceInstance.getStakedAmountInPool(0, accounts[6]);
     await lemaGovernanceInstance.startNewGovernance();

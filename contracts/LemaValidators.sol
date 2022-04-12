@@ -5,14 +5,14 @@ pragma experimental ABIEncoderV2;
 import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
 
 abstract contract LemaValidators is Ownable {
-    address[] public validators;
-    mapping(address => bool) public validatorExists;
-    uint256 public numberOfValidators = 0;
-    uint256 public numberOfValidatorAllowed = 10;
-    uint256 public validatorMinStake = 200;
-    mapping(address => bool) public haveCastedVotes;
-    mapping(address => uint256) public voteCount;
-    mapping(address => bool) public blocklisted;
+    address[] private validators;
+    mapping(address => bool) private validatorExists;
+    uint256 private numberOfValidatorAllowed = 10;
+    uint256 private validatorMinStake = 200;
+    mapping(address => bool) private castedVote;
+    mapping(address => uint256) private voteCount;
+    mapping(address => uint256) private votingPower;
+    mapping(address => bool) private blocklisted;
 
     modifier validValidatorsOnly() {
         require(
@@ -26,19 +26,44 @@ abstract contract LemaValidators is Ownable {
         return validators;
     }
 
-    function castVote(uint256 index) public virtual;
+    function getVoteCount(address validator) public view returns (uint256) {
+        return voteCount[validator];
+    }
 
-    // get list of validators
-    function listOfValidators() public view returns (address[] memory) {
-        address[] memory validValidators = new address[](numberOfValidators);
-        uint256 counter = 0;
+    function getValidatorsWhoHaveNotCastedVotes()
+        internal
+        view
+        returns (address[] memory)
+    {
+        address[] memory offlineValidators = new address[](0);
+        uint256 numberOfOfflineValidators = 0;
         for (uint256 i = 0; i < validators.length; i++) {
-            address user = validators[i];
-            if (validatorExists[user]) {
-                validValidators[counter++] = user;
+            if (!castedVote[validators[i]]) {
+                offlineValidators[numberOfOfflineValidators] = validators[i];
+                numberOfOfflineValidators++;
             }
         }
-        return validValidators;
+        return offlineValidators;
+    }
+
+    function getValidatorsExists(address _validator)
+        public
+        view
+        returns (bool)
+    {
+        return validatorExists[_validator];
+    }
+
+    function updateCastedVote(bool _castedVote) internal {
+        castedVote[msg.sender] = _castedVote;
+    }
+
+    function haveCastedVote(address _validator) public view returns (bool) {
+        return castedVote[_validator];
+    }
+
+    function getValidatorsMinStake() public view returns (uint256) {
+        return validatorMinStake;
     }
 
     // update validator min stake
@@ -53,20 +78,40 @@ abstract contract LemaValidators is Ownable {
     function applyForValidator() public virtual {
         require(!blocklisted[msg.sender], "LemaGovernance: Blocklisted wallet");
         require(
-            numberOfValidators <= numberOfValidatorAllowed,
+            validators.length < numberOfValidatorAllowed,
             "Validators allowed exceeded"
         );
 
         validatorExists[msg.sender] = true;
         validators.push(msg.sender);
-        numberOfValidators += 1;
     }
 
     // remove for validator
-    function removeFromValidator(address _user) public {
-        require(validatorExists[_user], "Validator does not exist");
-        validatorExists[_user] = false;
-        numberOfValidators -= 1;
+    function removeFromValidatorByIndex(uint256 index) public onlyOwner {
+        require(
+            index < validators.length,
+            "LemaGovernance: Validator index out of bounds"
+        );
+        validatorExists[validators[index]] = false;
+        validators[index] = validators[validators.length - 1];
+        validators.pop();
+    }
+
+    function getValidatorIndex(address _validator)
+        public
+        view
+        returns (uint256)
+    {
+        for (uint256 i = 0; i < validators.length; i++) {
+            if (validators[i] == _validator) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    function removeFromValidator(address _validator) public {
+        removeFromValidatorByIndex(getValidatorIndex(_validator));
     }
 
     // update numberOfValidatorAllowed
@@ -85,8 +130,13 @@ abstract contract LemaValidators is Ownable {
         blocklisted[_user] = false;
     }
 
-    function vestVotes(address validator, uint256 votingPower) internal {
-        voteCount[validator] += votingPower;
+    function vestVotes(address validator, uint256 _votingPower) internal {
+        voteCount[validator] += _votingPower;
+        votingPower[msg.sender] = _votingPower;
+    }
+
+    function withdrawVotes(address validator) internal {
+        voteCount[validator] -= votingPower[msg.sender];
     }
 
     // function delegateValidator(address validator) public virtual {
