@@ -24,7 +24,7 @@ contract LemaToken is BEP20("Lema Token", "LEMA") {
         return burnerAddress;
     }
 
-     /**
+    /**
      * @dev Returns the address of the nen chef.
      */
     function lemaChef() public view virtual returns (address) {
@@ -37,7 +37,10 @@ contract LemaToken is BEP20("Lema Token", "LEMA") {
     }
 
     modifier onlyLemaChefOrOwner() {
-        require(msg.sender == lemaChef() || msg.sender == owner(), "Need LemaChef or Owner !");
+        require(
+            msg.sender == lemaChef() || msg.sender == owner(),
+            "Need LemaChef or Owner !"
+        );
         _;
     }
 
@@ -46,17 +49,17 @@ contract LemaToken is BEP20("Lema Token", "LEMA") {
         burnerAddress = _newBurnerAddress;
     }
 
-    // update nenchef address, can only be updated by owner
-    function updateLemaChefAddress(address _newLemaChefAddress) public onlyLemaChefOrOwner {
+    // update lemachef address, can only be updated by owner
+    function updateLemaChefAddress(address _newLemaChefAddress)
+        public
+        onlyLemaChefOrOwner
+    {
         lemaChefAddress = _newLemaChefAddress;
     }
 
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner.
     function mint(address _to, uint256 _amount) public onlyOwner {
-        require(
-            totalSupply().add(_amount) <= cap(),
-            "LemaToken: Cap exceeded"
-        );
+        require(totalSupply().add(_amount) <= cap(), "LemaToken: Cap exceeded");
         _mint(_to, _amount);
     }
 

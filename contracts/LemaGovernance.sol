@@ -102,8 +102,10 @@ contract LemaGovernance is LemaChefV2 {
         }
 
         currentGovernance.validators = currentValidators;
+        currentGovernance.voters = getVoters();
         pastGovernances.push(currentGovernance);
         delete currentGovernance;
+        resetVoters();
 
         currentGovernance.governanceVotingStart = block.timestamp;
         currentGovernance.governanceVotingEnd = block.timestamp + 7776000; // 90 days
@@ -115,16 +117,6 @@ contract LemaGovernance is LemaChefV2 {
 
     function getProjects() public view returns (Project[] memory) {
         return currentGovernance.projects;
-    }
-
-    function getVoters()
-        public
-        view
-        virtual
-        override
-        returns (address[] memory)
-    {
-        return currentGovernance.voters;
     }
 
     function addProject(
@@ -174,7 +166,7 @@ contract LemaGovernance is LemaChefV2 {
         runningGovernanceOnly
     {
         super.delegateValidator(validator);
-        currentGovernance.voters.push(msg.sender);
+        addVoter(msg.sender);
     }
 
     function applyForValidator() public virtual override {
