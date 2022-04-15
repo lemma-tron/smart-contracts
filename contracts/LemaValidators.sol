@@ -86,6 +86,19 @@ abstract contract LemaValidators is Ownable {
         validators.push(msg.sender);
     }
 
+    function leaveFromValidator() public {
+        require(
+            validatorExists[msg.sender],
+            "LemaGovernance: Only validators can leave from validator"
+        );
+        require(
+            validators.length > 1,
+            "LemaGovernance: At least one validator must be present"
+        );
+
+        removeFromValidator(msg.sender);
+    }
+
     // remove for validator
     function removeFromValidatorByIndex(uint256 index) public onlyOwner {
         require(
@@ -110,7 +123,10 @@ abstract contract LemaValidators is Ownable {
         return 0;
     }
 
-    function removeFromValidator(address _validator) public {
+    function removeFromValidator(address _validator)
+        internal
+        validValidatorsOnly
+    {
         removeFromValidatorByIndex(getValidatorIndex(_validator));
     }
 
