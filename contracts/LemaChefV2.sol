@@ -25,6 +25,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         uint256 lastStakedDate; // quasi-last staked date
         uint256 lastDeposited; // last deposited timestamp
         uint256 lastDepositedAmount; // last deposited amount
+        uint256 multiplier; // individual multiplier, times 10000. should not exceed 10000
         //
         // We do some fancy math here. Basically, any point in time, the amount of LEMAs
         // entitled to a user but is pending to be distributed is:
@@ -280,7 +281,8 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
                 lemaReward.mul(1e12).div(lpSupply)
             ); //accumulated Lema per each share
         }
-        return user.amount.mul(accLEMAPerShare).div(1e12).sub(user.rewardDebt); //get the pending LEMAs which are rewarded to us to harvest
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
+        return rewardDebt.sub(user.rewardDebt); //get the pending LEMAs which are rewarded to us to harvest
     }
 
     // Safe Lema transfer function, just in case if rounding error causes pool to not have enough LEMAs.
@@ -381,6 +383,17 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         }
     }
 
+    function getRewardDebt(UserInfo memory user, uint256 accLEMAPerShare)
+        internal
+        pure
+        returns (uint256)
+    {
+        return
+            user.amount.mul(accLEMAPerShare).div(1e12).mul(user.multiplier).div(
+                1e4
+            );
+    }
+
     // Deposit LP tokens to LemaChef for Lema allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
         require(_pid != 0, "deposit Lema by staking");
@@ -388,10 +401,9 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
         uint256 accLEMAPerShare = getAccLEMAPerShare(pool);
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
         if (user.amount > 0) {
-            uint256 pending = user.amount.mul(accLEMAPerShare).div(1e12).sub(
-                user.rewardDebt
-            );
+            uint256 pending = rewardDebt.sub(user.rewardDebt);
             if (pending > 0) {
                 transferRewardWithWithdrawFee(user.lastDeposited, pending);
             }
@@ -412,7 +424,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
             user.lastDepositedAmount = _amount;
         }
 
-        user.rewardDebt = user.amount.mul(accLEMAPerShare).div(1e12);
+        user.rewardDebt = rewardDebt;
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -461,9 +473,8 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 accLEMAPerShare = getAccLEMAPerShare(pool);
-        uint256 pending = user.amount.mul(accLEMAPerShare).div(1e12).sub(
-            user.rewardDebt
-        );
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
+        uint256 pending = rewardDebt.sub(user.rewardDebt);
         if (pending > 0) {
             transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
@@ -471,7 +482,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
-        user.rewardDebt = user.amount.mul(accLEMAPerShare).div(1e12);
+        user.rewardDebt = rewardDebt;
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
@@ -531,10 +542,9 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         UserInfo storage user = userInfo[0][msg.sender];
         updatePool(0);
         uint256 accLEMAPerShare = getAccLEMAPerShare(pool);
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
         if (user.amount > 0) {
-            uint256 pending = user.amount.mul(accLEMAPerShare).div(1e12).sub(
-                user.rewardDebt
-            );
+            uint256 pending = rewardDebt.sub(user.rewardDebt);
             if (pending > 0) {
                 transferRewardWithWithdrawFee(user.lastDeposited, pending);
             }
@@ -554,7 +564,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
             user.lastDeposited = block.timestamp;
             user.lastDepositedAmount = _amount;
         }
-        user.rewardDebt = user.amount.mul(accLEMAPerShare).div(1e12);
+        user.rewardDebt = rewardDebt;
         emit Deposit(msg.sender, 0, _amount);
     }
 
@@ -565,9 +575,8 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(0);
         uint256 accLEMAPerShare = getAccLEMAPerShare(pool);
-        uint256 pending = user.amount.mul(accLEMAPerShare).div(1e12).sub(
-            user.rewardDebt
-        );
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
+        uint256 pending = rewardDebt.sub(user.rewardDebt);
         if (pending > 0) {
             transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
@@ -580,7 +589,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
-        user.rewardDebt = user.amount.mul(accLEMAPerShare).div(1e12);
+        user.rewardDebt = rewardDebt;
         emit Withdraw(msg.sender, 0, _amount);
     }
 }

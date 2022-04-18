@@ -9,6 +9,7 @@ abstract contract LemaValidators is Ownable {
     mapping(address => bool) private validatorExists;
     uint256 private numberOfValidatorAllowed = 10;
     uint256 private validatorMinStake = 200;
+    uint256 private castedVoteCount;
     mapping(address => bool) private castedVote;
     mapping(address => uint256) private voteCount;
     mapping(address => uint256) private votingPower;
@@ -35,7 +36,9 @@ abstract contract LemaValidators is Ownable {
         view
         returns (address[] memory)
     {
-        address[] memory offlineValidators = new address[](0);
+        address[] memory offlineValidators = new address[](
+            validators.length - castedVoteCount
+        );
         uint256 numberOfOfflineValidators = 0;
         for (uint256 i = 0; i < validators.length; i++) {
             if (!castedVote[validators[i]]) {
@@ -44,6 +47,22 @@ abstract contract LemaValidators is Ownable {
             }
         }
         return offlineValidators;
+    }
+
+    function getValidatorsWhoHaveCastedVotes()
+        internal
+        view
+        returns (address[] memory)
+    {
+        address[] memory onlineValidators = new address[](castedVoteCount);
+        uint256 numberOfOnlineValidators = 0;
+        for (uint256 i = 0; i < validators.length; i++) {
+            if (castedVote[validators[i]]) {
+                onlineValidators[numberOfOnlineValidators] = validators[i];
+                numberOfOnlineValidators++;
+            }
+        }
+        return onlineValidators;
     }
 
     function getValidatorsExists(address _validator)
@@ -55,6 +74,11 @@ abstract contract LemaValidators is Ownable {
     }
 
     function updateCastedVote(bool _castedVote) internal {
+        if (_castedVote && !castedVote[msg.sender]) {
+            castedVoteCount++;
+        } else if (!_castedVote && castedVote[msg.sender]) {
+            castedVoteCount--;
+        }
         castedVote[msg.sender] = _castedVote;
     }
 

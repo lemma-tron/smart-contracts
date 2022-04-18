@@ -65,9 +65,7 @@ contract LemaGovernance is LemaChefV2 {
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
     }
 
-    function startNewGovernance() public onlyOwner {
-        // Slashing
-        // Offline Validator
+    function slashOfflineValidators() internal {
         address[] memory currentValidators = getValidators();
         address[]
             memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
@@ -95,7 +93,25 @@ contract LemaGovernance is LemaChefV2 {
             }
         }
 
-        currentGovernance.validators = currentValidators;
+        // Reducing multiplier
+        for (uint256 i = 0; i < offlineValidators.length; i++) {
+            address user = offlineValidators[i];
+            UserInfo storage userData = userInfo[0][user];
+            userData.multiplier = 5000;
+        }
+
+        // Recovering multiplier
+        address[] memory onlineValidators = getValidatorsWhoHaveCastedVotes();
+        for (uint256 i = 0; i < onlineValidators.length; i++) {
+            address user = onlineValidators[i];
+            UserInfo storage userData = userInfo[0][user];
+            userData.multiplier = 10000;
+        }
+    }
+
+    function startNewGovernance() public onlyOwner {
+        slashOfflineValidators();
+        currentGovernance.validators = getValidators();
         currentGovernance.voters = getVoters();
         pastGovernances.push(currentGovernance);
         delete currentGovernance;
