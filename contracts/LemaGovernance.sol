@@ -65,7 +65,7 @@ contract LemaGovernance is LemaChefV2 {
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
     }
 
-    function slashOfflineValidators() internal {
+    function getSlashingParameter() internal returns (uint256) {
         address[] memory currentValidators = getValidators();
         address[]
             memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
@@ -74,10 +74,19 @@ contract LemaGovernance is LemaChefV2 {
         uint256 n = currentValidators.length.mul(100);
         uint256 slashingParameter = x.sub(n.div(50)).mul(4).div(n.div(100));
 
+        if (slashingParameter > 100) {
+            slashingParameter = 100;
+        }
+
+        return slashingParameter;
+    }
+
+    function slashOfflineValidators() internal {
+        address[]
+            memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
+        uint256 slashingParameter = getSlashingParameter();
+
         if (slashingParameter > 0) {
-            if (slashingParameter > 100) {
-                slashingParameter = 100;
-            }
             for (uint256 i = 0; i < offlineValidators.length; i++) {
                 address user = offlineValidators[i];
                 uint256 userStake = getStakedAmountInPool(0, user);
@@ -112,6 +121,8 @@ contract LemaGovernance is LemaChefV2 {
     function evaluateThreeValidatorsNominatedByNominator() internal {
         address[] memory nominators = getVoters();
 
+        uint256 slashingParameter = getSlashingParameter();
+
         for (uint256 i = 0; i < nominators.length; i++) {
             address nominator = nominators[i];
             UserInfo storage userData = userInfo[0][nominator];
@@ -137,6 +148,18 @@ contract LemaGovernance is LemaChefV2 {
                 }
             }
             userData.multiplier = 5000;
+
+            if (slashingParameter > 0) {
+                uint256 userStake = getStakedAmountInPool(0, nominator);
+                uint256 toBeSlashedAmount = userStake
+                    .mul(7)
+                    .mul(slashingParameter)
+                    .div(10000);
+
+                safeLEMATransfer(treasury, toBeSlashedAmount);
+
+                userData.amount = userData.amount.sub(toBeSlashedAmount);
+            }
         }
     }
 
