@@ -109,8 +109,40 @@ contract LemaGovernance is LemaChefV2 {
         }
     }
 
+    function evaluateThreeValidatorsNominatedByNominator() internal {
+        address[] memory nominators = getVoters();
+
+        for (uint256 i = 0; i < nominators.length; i++) {
+            address nominator = nominators[i];
+            UserInfo storage userData = userInfo[0][nominator];
+            address[3]
+                memory validatorsNominatedByNominator = getValidatorsNominatedByNominator(
+                    nominator
+                );
+
+            for (uint256 j = 0; j < 3; j++) {
+                address validator = validatorsNominatedByNominator[j];
+                if (haveCastedVote(validator)) {
+                    userData.multiplier = 10000;
+
+                    if (j != 0) {
+                        vestVotesToDifferentValidator(
+                            nominator,
+                            validatorsNominatedByNominator[0],
+                            validator
+                        );
+                    }
+
+                    return;
+                }
+            }
+            userData.multiplier = 5000;
+        }
+    }
+
     function startNewGovernance() public onlyOwner {
         slashOfflineValidators();
+        evaluateThreeValidatorsNominatedByNominator();
         currentGovernance.validators = getValidators();
         currentGovernance.voters = getVoters();
         pastGovernances.push(currentGovernance);
@@ -171,17 +203,15 @@ contract LemaGovernance is LemaChefV2 {
 
     function delegateValidator(address validator)
         public
-        virtual
         override
         runningGovernanceOnly
     {
         super.delegateValidator(validator);
-        addVoter(msg.sender);
     }
 
     function applyForValidator() public virtual override {
         if (haveDelagatedValidator(msg.sender)) {
-            withdrawVotes(getVotedToValidator(msg.sender));
+            withdrawVotes(getValidatorsNominatedByNominator(msg.sender)[0]); // using 0 index as votes were accumulated with the first validator among the three returned ones
 
             unDelegateValidator();
 

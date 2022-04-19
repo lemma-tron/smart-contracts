@@ -437,31 +437,34 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         );
     }
 
-    function delegateValidator(address validator)
-        public
-        virtual
-        override(LemaVoters)
-    {
-        require(
-            getValidatorsExists(validator),
-            "LemaGovernance: Validator is not a valid"
-        );
-        LemaVoters.delegateValidator(validator);
-
-        uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
+    function getVotingPower(address _user) internal view returns (uint256) {
+        uint256 lemaStaked = getStakedAmountInPool(0, _user);
         require(lemaStaked > 0, "LemaChefV2: Stake not enough to vote");
 
-        uint256 lastLemaStakedDate = getLastStakedDateInPool(0, msg.sender);
+        uint256 lastLemaStakedDate = getLastStakedDateInPool(0, _user);
         uint256 numberOfDaysStaked = block
             .timestamp
             .sub(lastLemaStakedDate)
             .div(86400);
-        bool multiPool = multiPoolOrNot(msg.sender);
+        bool multiPool = multiPoolOrNot(_user);
         uint256 votingPower = VotingPower.calculate(
             numberOfDaysStaked,
             lemaStaked,
             multiPool
         );
+
+        return votingPower;
+    }
+
+    function delegateValidator(address validator) public virtual override {
+        require(
+            getValidatorsExists(validator),
+            "LemaGovernance: Validator is not a valid"
+        );
+        super.delegateValidator(validator);
+
+        uint256 votingPower = getVotingPower(msg.sender);
+        LemaVoters.vestVotes(votingPower);
         LemaValidators.vestVotes(validator, votingPower);
     }
 

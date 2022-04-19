@@ -179,7 +179,12 @@ abstract contract LemaValidators is Ownable {
         voteCount[validator] -= votingPower[msg.sender];
     }
 
-    // function delegateValidator(address validator) public virtual {
-    //     voteCount[validator] += 1;
-    // }
+    function vestVotesToDifferentValidator(
+        address nominator,
+        address previousValidator,
+        address newValidator
+    ) internal {
+        voteCount[previousValidator] -= votingPower[nominator];
+        voteCount[newValidator] += votingPower[nominator];
+    }
 }
