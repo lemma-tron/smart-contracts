@@ -65,7 +65,7 @@ contract LemaGovernance is LemaChefV2 {
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
     }
 
-    function getSlashingParameter() internal returns (uint256) {
+    function getSlashingParameter() internal view returns (uint256) {
         address[] memory currentValidators = getValidators();
         address[]
             memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();

@@ -88,6 +88,21 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         uint256 amount
     );
 
+    modifier fridayOnly() {
+        uint256 dayCount = block.timestamp / 1 days;
+        uint256 dayOfWeek = (dayCount - 2) % 7;
+        require(
+            dayOfWeek == 5,
+            "LemaChef: Operation is allowed only during Friday."
+        );
+        _;
+
+        // Explanation
+        // 1970 January 1 is Thrusday
+        // So to get current day's index counting from Saturday as 0,
+        // we are subtracting 2 from dayCount and modulo 7.
+    }
+
     constructor(
         LemaToken _lemaToken,
         address _treasury,
@@ -594,5 +609,19 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         }
         user.rewardDebt = rewardDebt;
         emit Withdraw(msg.sender, 0, _amount);
+    }
+
+    function withdrawReward(uint256 _pid) public fridayOnly {
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        require(user.amount > 0, "withdraw: not good");
+        updatePool(_pid);
+        uint256 accLEMAPerShare = getAccLEMAPerShare(pool);
+        uint256 rewardDebt = getRewardDebt(user, accLEMAPerShare);
+        uint256 pending = rewardDebt.sub(user.rewardDebt);
+        if (pending > 0) {
+            transferRewardWithWithdrawFee(user.lastDeposited, pending);
+        }
+        user.rewardDebt = rewardDebt;
     }
 }
