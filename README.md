@@ -16,3 +16,17 @@
 
 - [Offical Site](https://www.lemmatron.com/)
 - [Whitepaper](<https://www.lemmatron.com/assets/whitepaper/whitepaper(v2).pdf>)
+
+## Upgradable Demo
+
+### Understanding the process and contract state of an upgradable contract
+
+1. truffle console
+2. npm run test:initial
+
+During this phase(deploying proxy), Initial version of upgradable contract is deployed on top of which we can later add new features.
+
+1. npm run migrate:later
+2. npm run test:later
+
+After upgrading proxy, We can access the new features of the upgraded contract through the same old address.

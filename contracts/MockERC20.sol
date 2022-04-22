@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/BEP20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-contract MockBEP20 is ERC20Upgradeable {
+contract MockERC20 is ERC20Upgradeable {
     address private owner;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -18,9 +18,5 @@ contract MockBEP20 is ERC20Upgradeable {
         __ERC20_init(name, symbol);
         _mint(msg.sender, supply);
         owner = msg.sender;
-    }
-
-    function getOwner() external view returns (address) {
-        return owner;
     }
 }

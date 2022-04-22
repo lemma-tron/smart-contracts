@@ -4,6 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "migrate:initial": "truffle migrate --to 2",
+    "migrate:later": "truffle migrate -f 3 --to 3",
+    "test:initial": "truffle test ./test/MockBEP20Before.js",
+    "test:later": "truffle test ./test/MockBEP20After.js",
+    "network:clean": "truffle networks --clean",
     "slint": "solhint \"contracts/**/*.sol\"",
     "coverage": "truffle run coverage",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,13 +17,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@openzeppelin/contracts": "^4.5.0",
+    "@openzeppelin/contracts-upgradeable": "^4.5.2",
+    "@openzeppelin/truffle-upgrades": "^1.15.0",
     "chai": "^4.3.4",
     "eth-gas-reporter": "^0.2.22",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.17",
-    "truffle": "^5.4.10"
+    "truffle": "^5.5.11"
   },
   "dependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
