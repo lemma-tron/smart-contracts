@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./lib/VotingPower.sol";
 
@@ -14,9 +13,9 @@ import "./LemaValidators.sol";
 import "./LemaVoters.sol";
 
 // Master Contract of Lemmatron
-abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
-    using SafeMath for uint256;
-    using SafeBEP20 for IBEP20;
+abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     // Info of each user.
     struct UserInfo {
@@ -41,7 +40,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
 
     // Info of each pool.
     struct PoolInfo {
-        IBEP20 lpToken; // Address of LP token contract.
+        IERC20Upgradeable lpToken; // Address of LP token contract.
         // uint256 allocPoint; // How many allocation points assigned to this pool. LEMAs to distribute per block.
         uint256 allocPoint; // Considering 1000 for equal share as other pools
         uint256 lastRewardBlock; // Last block number that LEMAs distribution occurs.
@@ -50,7 +49,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         uint256 accLEMAPerShareForNominator; // Reward for staking(Rs)
     }
 
-    string public name = "Lema Chef";
+    string public name;
 
     LemaToken public lemaToken;
 
@@ -59,24 +58,24 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     uint256 public lemaPerBlockForNominator;
 
     // Bonus muliplier for early Lema makers.
-    uint256 public bonusMultiplier = 1;
+    uint256 public bonusMultiplier;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     // Total allocation points. Must be the sum of all allocation points in all pools.
-    uint256 public totalAllocPoint = 0;
+    uint256 public totalAllocPoint;
     // The block number when mining starts.
     uint256 public startBlock;
     // Estimated Total Blocks per year.
-    uint256 public blockPerYear = 31536000 / 5; // 1 year in seconds / 5 seconds(mean block time).
+    uint256 public blockPerYear;
 
     // penalty fee when withdrawing reward within 4 weeks of last deposit and after 4 weeks
-    uint256 public penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
-    uint256 public penaltyFeeRate2 = 15; // fee if last deposited is > 4 weeks (always implemented)
+    uint256 public penaltyFeeRate1;
+    uint256 public penaltyFeeRate2;
     // Penalties period
-    uint256 public penaltyPeriod = 4 weeks;
+    uint256 public penaltyPeriod;
     // Treasury address
     address public treasury;
 
@@ -103,11 +102,16 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         // we are subtracting 2 from dayCount and modulo 7.
     }
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function __LemaChef_init(
         LemaToken _lemaToken,
         address _treasury,
         uint256 _startBlock
-    ) public {
+    ) public initializer {
+        __Ownable_init();
+        __LemaValidators_init();
         lemaToken = _lemaToken;
         treasury = _treasury;
         // lemaPerBlock = _lemaPerBlock;
@@ -118,15 +122,22 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
             PoolInfo({
                 lpToken: _lemaToken,
                 allocPoint: 1000,
-                lastRewardBlock: startBlock,
+                lastRewardBlock: _startBlock,
                 accLEMAPerShareForValidator: 0,
                 accLEMAPerShareForNominator: 0
             })
         );
         totalAllocPoint = 1000;
+
+        name = "Lema Chef";
+        bonusMultiplier = 1;
+        blockPerYear = 31536000 / 5; // 1 year in seconds / 5 seconds(mean block time).
+        penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
+        penaltyFeeRate2 = 15; // fee if last deposited is > 4 weeks (always implemented)
+        penaltyPeriod = 4 weeks;
     }
 
-    function updateMultiplier(uint256 multiplierNumber) public onlyOwner {
+    function updateMultiplier(uint256 multiplierNumber) external onlyOwner {
         require(multiplierNumber > 0, "Multipler is too less");
         bonusMultiplier = multiplierNumber;
         //determining the Lema tokens allocated to each farm
@@ -194,9 +205,9 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function add(
         uint256 _allocPoint,
-        IBEP20 _lpToken,
+        IERC20Upgradeable _lpToken,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -222,7 +233,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         uint256 _pid,
         uint256 _allocPoint,
         bool _withUpdate
-    ) public onlyOwner {
+    ) external onlyOwner {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -337,8 +348,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         view
         returns (uint256)
     {
-        UserInfo memory user = userInfo[_pid][_user];
-        return user.amount;
+        return userInfo[_pid][_user].amount;
     }
 
     // to fetch last staked date in given pool of given user
@@ -347,16 +357,14 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         view
         returns (uint256)
     {
-        UserInfo memory user = userInfo[_pid][_user];
-        return user.lastStakedDate;
+        return userInfo[_pid][_user].lastStakedDate;
     }
 
     // to fetch if user is LP Token Staker or not
     function multiPoolOrNot(address _user) public view returns (bool) {
         uint256 length = poolInfo.length;
         for (uint256 pid = 1; pid < length; pid++) {
-            UserInfo memory user = userInfo[pid][_user];
-            if (user.amount > 0) {
+            if (userInfo[pid][_user].amount > 0) {
                 return true;
             }
         }
@@ -410,7 +418,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // Deposit LP tokens to LemaChef for Lema allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) external {
         require(_pid != 0, "deposit Lema by staking");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -484,7 +492,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // Withdraw LP tokens from LemaChef.
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount) external {
         require(_pid != 0, "withdraw Lema by unstaking");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -514,7 +522,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) public {
+    function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         uint256 amount = user.amount;
@@ -525,13 +533,13 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // Update treasury address by the previous treasury address holder.
-    function updateTreasuryAddress(address _treasury) public {
+    function updateTreasuryAddress(address _treasury) external {
         require(msg.sender == treasury, "Updating Treasury Forbidden !");
         treasury = _treasury;
     }
 
     //Update start reward block
-    function updateStartBlock(uint256 _startBlock) public onlyOwner {
+    function updateStartBlock(uint256 _startBlock) external onlyOwner {
         startBlock = _startBlock;
     }
 
@@ -541,21 +549,21 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     // }
 
     function updateLemaPerBlockForValidator(uint256 _lemaPerBlock)
-        public
+        external
         onlyOwner
     {
         lemaPerBlockForValidator = _lemaPerBlock;
     }
 
     function updateLemaPerBlockForNominator(uint256 _lemaPerBlock)
-        public
+        external
         onlyOwner
     {
         lemaPerBlockForNominator = _lemaPerBlock;
     }
 
     // Stake Lema tokens to LemaChef
-    function enterStaking(uint256 _amount) public {
+    function enterStaking(uint256 _amount) external {
         PoolInfo storage pool = poolInfo[0];
         UserInfo storage user = userInfo[0][msg.sender];
         updatePool(0);
@@ -587,7 +595,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
     }
 
     // Withdraw Lema tokens from STAKING.
-    function leaveStaking(uint256 _amount) public {
+    function leaveStaking(uint256 _amount) external {
         PoolInfo storage pool = poolInfo[0];
         UserInfo storage user = userInfo[0][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -611,7 +619,7 @@ abstract contract LemaChefV2 is Ownable, LemaValidators, LemaVoters {
         emit Withdraw(msg.sender, 0, _amount);
     }
 
-    function withdrawReward(uint256 _pid) public fridayOnly {
+    function withdrawReward(uint256 _pid) external fridayOnly {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount > 0, "withdraw: not good");

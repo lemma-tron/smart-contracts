@@ -1,20 +1,34 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/BEP20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 // This is Lemmatron Governance Token
-contract LemaToken is BEP20("Lema Token", "LEMA") {
-    uint256 private _cap = 1e28; //10 billion
+contract LemaToken is ERC20Upgradeable, OwnableUpgradeable {
+    using SafeMathUpgradeable for uint256;
+
+    uint256 private _cap;
     address public burnerAddress;
     address public lemaChefAddress;
 
-    function cap() public view virtual returns (uint256) {
-        return _cap;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(address _burnerAddress) public initializer {
+        __ERC20_init("Lema Token", "LEMA");
+        __Ownable_init();
+        burnerAddress = _burnerAddress;
+        _cap = 1e28; //10 billion
     }
 
-    constructor(address _burnerAddress) public {
-        burnerAddress = _burnerAddress;
+    function getOwner() external view returns (address) {
+        return owner();
+    }
+
+    function cap() public view virtual returns (uint256) {
+        return _cap;
     }
 
     /**
@@ -35,6 +49,11 @@ contract LemaToken is BEP20("Lema Token", "LEMA") {
         require(msg.sender == burner(), "Need Burner !");
         _;
     }
+
+    // modifier onlyOwner() {
+    //     require(msg.sender == owner, "Need Burner !");
+    //     _;
+    // }
 
     modifier onlyLemaChefOrOwner() {
         require(

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./LemaToken.sol";
 
-contract LemaTokenVesting is Ownable {
-    using SafeMath for uint256;
+contract LemaTokenVesting is OwnableUpgradeable {
+    using SafeMathUpgradeable for uint256;
 
     LemaToken public lemaToken;
 
@@ -24,7 +24,7 @@ contract LemaTokenVesting is Ownable {
 
     mapping(address => TokenGrant[]) public grants;
 
-    uint256 public _totalLemaTokenVestedAmount = 0;
+    uint256 public _totalLemaTokenVestedAmount;
 
     address public initialLiquidity;
     address public privateSale;
@@ -37,7 +37,10 @@ contract LemaTokenVesting is Ownable {
 
     uint256 private contractDeployedTimestamp;
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
         LemaToken _lemaToken,
         address _initialLiquidity,
         address _privateSale,
@@ -47,7 +50,8 @@ contract LemaTokenVesting is Ownable {
         address _advisor,
         address _team,
         address _treasury
-    ) public {
+    ) public initializer {
+        __Ownable_init();
         lemaToken = _lemaToken;
         initialLiquidity = _initialLiquidity;
         privateSale = _privateSale;

@@ -4,7 +4,7 @@ const LemaToken = artifacts.require("LemaToken");
 let lemaGovernanceInstance;
 let lemaTokenInstance;
 
-contract("LemaGovernance", function (accounts) {
+contract.skip("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
     lemaTokenInstance = await LemaToken.deployed();
@@ -214,7 +214,7 @@ contract("LemaGovernance", function (accounts) {
   });
 });
 
-contract("LemaGovernance: Slashing", function (accounts) {
+contract.skip("LemaGovernance: Slashing", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
     lemaTokenInstance = await LemaToken.deployed();

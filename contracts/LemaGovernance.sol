@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 import "./LemaChefV2.sol";
 
 // Governance contract of Lemmatrom
 contract LemaGovernance is LemaChefV2 {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     // Info of each project.
     struct Project {
@@ -54,13 +53,18 @@ contract LemaGovernance is LemaChefV2 {
         _;
     }
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
         uint256 _governanceVotingStart,
         uint256 _governanceVotingEnd,
         LemaToken _lemaToken,
         address _treasury,
         uint256 _startBlock
-    ) public LemaChefV2(_lemaToken, _treasury, _startBlock) {
+    ) public initializer {
+        __Ownable_init();
+        __LemaChef_init(_lemaToken, _treasury, _startBlock);
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
     }
@@ -163,7 +167,7 @@ contract LemaGovernance is LemaChefV2 {
         }
     }
 
-    function startNewGovernance() public onlyOwner {
+    function startNewGovernance() external onlyOwner {
         slashOfflineValidators();
         evaluateThreeValidatorsNominatedByNominator();
         currentGovernance.validators = getValidators();
@@ -176,11 +180,11 @@ contract LemaGovernance is LemaChefV2 {
         currentGovernance.governanceVotingEnd = block.timestamp + 7776000; // 90 days
     }
 
-    function getPastGovernances() public view returns (Governance[] memory) {
+    function getPastGovernances() external view returns (Governance[] memory) {
         return pastGovernances;
     }
 
-    function getProjects() public view returns (Project[] memory) {
+    function getProjects() external view returns (Project[] memory) {
         return currentGovernance.projects;
     }
 
@@ -195,7 +199,7 @@ contract LemaGovernance is LemaChefV2 {
         string memory _twitterLink,
         string memory _telegramLink,
         string memory _discordLink
-    ) public runningGovernanceOnly {
+    ) external runningGovernanceOnly {
         uint256 index = currentGovernance.projects.length;
         currentGovernance.projects.push();
         Project storage project = currentGovernance.projects[index];
@@ -212,7 +216,7 @@ contract LemaGovernance is LemaChefV2 {
     }
 
     function approveProject(uint256 index)
-        public
+        external
         runningGovernanceOnly
         onlyOwner
     {
@@ -254,7 +258,7 @@ contract LemaGovernance is LemaChefV2 {
         super.applyForValidator();
     }
 
-    function castVote(uint256 index) public validValidatorsOnly {
+    function castVote(uint256 index) external validValidatorsOnly {
         require(
             !haveCastedVote(msg.sender),
             "LemaGovernance: You have already voted"
@@ -272,7 +276,7 @@ contract LemaGovernance is LemaChefV2 {
         updateCastedVote(true);
     }
 
-    function rewardMostVotedProject() public onlyOwner runningGovernanceOnly {
+    function rewardMostVotedProject() external onlyOwner runningGovernanceOnly {
         uint256 mostVotes = 0;
         uint256 mostVotedIndex = 0;
         for (

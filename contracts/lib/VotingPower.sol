@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 library VotingPower {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     function calculateAlpha(
         uint256 d,

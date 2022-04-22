@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title PresaleLemaRefundVault
@@ -12,9 +12,9 @@ import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
  * is in progress. Supports refunding the money if presale fails,
  * and forwarding it if presale is successful.
  */
-contract PresaleLemaRefundVault is Ownable {
-    using SafeMath for uint256;
-    using SafeBEP20 for IBEP20;
+contract PresaleLemaRefundVault is OwnableUpgradeable {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     enum State {
         Active,
@@ -25,20 +25,25 @@ contract PresaleLemaRefundVault is Ownable {
     mapping(address => uint256) public deposited;
     mapping(address => bool) public tokenClaimedTracker;
 
-    uint256 public totalBUSDDeposited = 0;
+    uint256 public totalBUSDDeposited;
 
     address public wallet;
-    IBEP20 public busd;
+    IERC20Upgradeable public busd;
     State public state;
 
     event Closed();
     event RefundsEnabled();
     event Refunded(address indexed beneficiary, uint256 busdAmount);
 
-    constructor(address _wallet, IBEP20 _busd) public {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(address _wallet, IERC20Upgradeable _busd) public initializer {
+        __Ownable_init();
         wallet = _wallet;
         busd = _busd;
         state = State.Active;
+        totalBUSDDeposited = 0;
     }
 
     function approve(
@@ -46,7 +51,7 @@ contract PresaleLemaRefundVault is Ownable {
         address spender,
         uint256 amount
     ) public onlyOwner returns (bool) {
-        IBEP20(tokenAddress).approve(spender, amount);
+        IERC20Upgradeable(tokenAddress).approve(spender, amount);
         return true;
     }
 

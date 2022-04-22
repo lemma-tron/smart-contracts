@@ -4,7 +4,7 @@ const LemaToken = artifacts.require("LemaToken");
 
 let lemaStakingInstance;
 
-contract("LemaStaking", function (accounts) {
+contract.skip("LemaStaking", function (accounts) {
   it("should assert true", async () => {
     lemaStakingInstance = await LemaGovernance.deployed();
     return assert(lemaStakingInstance !== undefined, "LemaGovernance contract should be defined");

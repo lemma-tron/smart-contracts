@@ -1,37 +1,35 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/SafeBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
-import "@pancakeswap/pancake-swap-lib/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./PresaleLemaRefundVault.sol";
 import "./LemaToken.sol";
 
-contract PresaleLemaV2 is Ownable {
-    using SafeMath for uint256;
-    using SafeBEP20 for IBEP20;
+contract PresaleLemaV2 is OwnableUpgradeable {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     // The vault that will store the BUSD until the goal is reached
     PresaleLemaRefundVault public vault;
 
     // The block number of when the presale starts
-    // Apr 6th 2022, 12 am (UTC)
-    uint256 public startTime = 1649203200;
+    uint256 public startTime;
 
     // The block number of when the presale ends
-    // May 21st 2022, 12 am (UTC)
-    uint256 public endTime = 1653091200;
+    uint256 public endTime;
 
-    uint256 public startingPrice = 0.00005 ether;
-    uint256 public closingPrice = 0.00010 ether;
+    uint256 public startingPrice;
+    uint256 public closingPrice;
 
     LemaToken public lemaToken;
-    IBEP20 public busd;
+    IERC20Upgradeable public busd;
 
     // Set token claimable or not
-    bool public tokenClaimable = false;
+    bool public tokenClaimable;
 
     // The wallet that holds the BUSD raised on the presale
     address public wallet;
@@ -39,10 +37,10 @@ contract PresaleLemaV2 is Ownable {
     uint256 public constant TOTAL_TOKENS = 400000000;
 
     // The amount of BUSD raised
-    uint256 public busdRaised = 0;
+    uint256 public busdRaised;
 
     // The amount of tokens raised
-    uint256 public tokensRaised = 0;
+    uint256 public tokensRaised;
 
     // The max amount of BUSD that you can pay to participate in the presale
     uint256 public constant MAX_PURCHASE = 10000 * 1e18;
@@ -52,16 +50,16 @@ contract PresaleLemaV2 is Ownable {
 
     // If the presale wasn't successful, this will be true and users will be able
     // to claim the refund of their BUSD
-    bool public isRefunding = false;
+    bool public isRefunding;
 
     // If the presale has ended or not
-    bool public isEnded = false;
+    bool public isEnded;
 
     // The number of transactions
     uint256 public numberOfTransactions;
 
     // The amount of tokens claimed
-    uint256 public tokensClaimed = 0;
+    uint256 public tokensClaimed;
 
     // How much each user paid for the presale
     mapping(address => uint256) public presaleBalances;
@@ -90,22 +88,36 @@ contract PresaleLemaV2 is Ownable {
 
     modifier runningPreSaleOnly() {
         require(
-            now >= startTime && now < endTime,
+            block.timestamp >= startTime && block.timestamp < endTime,
             "Presale has not started or already ended."
         );
         _;
     }
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize(
         LemaToken _lemaToken,
-        IBEP20 _busd,
+        IERC20Upgradeable _busd,
         address _wallet,
         PresaleLemaRefundVault _vault
-    ) public {
+    ) public initializer {
+        __Ownable_init();
         lemaToken = _lemaToken;
         busd = _busd;
         wallet = _wallet;
         vault = _vault;
+        startTime = 1649203200; // Apr 6th 2022, 12 am (UTC)
+        endTime = 1653091200;   // May 21st 2022, 12 am (UTC)
+        startingPrice = 0.00005 ether;
+        closingPrice = 0.00010 ether;
+        tokenClaimable = false;
+        busdRaised = 0;
+        tokensRaised = 0;
+        isRefunding = false;
+        isEnded = false;
+        tokensClaimed = 0;
     }
 
     function getPrice() public view returns (uint256) {
@@ -148,7 +160,7 @@ contract PresaleLemaV2 is Ownable {
     /// @notice Allow to update Presale start date
     /// @param _startTime Starttime of Presale
     function setStartDate(uint256 _startTime) public onlyOwner {
-        require(now < _startTime, "Can only update future start time");
+        require(block.timestamp < _startTime, "Can only update future start time");
         require(endTime > _startTime, "End time should be greater");
         startTime = _startTime;
     }
@@ -156,7 +168,7 @@ contract PresaleLemaV2 is Ownable {
     /// @notice Allow to extend Presale end date
     /// @param _endTime Endtime of Presale
     function setEndDate(uint256 _endTime) public onlyOwner {
-        require(now < _endTime, "Can only update future end time");
+        require(block.timestamp < _endTime, "Can only update future end time");
         require(startTime < _endTime, "End time should be greater");
         endTime = _endTime;
     }
@@ -217,7 +229,7 @@ contract PresaleLemaV2 is Ownable {
 
     /// @notice Public function to check if the presale has ended or not
     function hasEnded() public view returns (bool) {
-        return now > endTime;
+        return block.timestamp > endTime;
     }
 
     function setTokenClaimable(bool _claimable) public onlyOwner {

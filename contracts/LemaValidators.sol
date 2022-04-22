@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "@pancakeswap/pancake-swap-lib/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract LemaValidators is Ownable {
+abstract contract LemaValidators is OwnableUpgradeable {
     address[] private validators;
     mapping(address => bool) private validatorExists;
-    uint256 private numberOfValidatorAllowed = 10;
-    uint256 private validatorMinStake = 200;
+    uint256 private numberOfValidatorAllowed;
+    uint256 private validatorMinStake;
     uint256 private castedVoteCount;
     mapping(address => bool) private castedVote;
     mapping(address => uint256) private voteCount;
@@ -21,6 +20,12 @@ abstract contract LemaValidators is Ownable {
             "LemaGovernance: Only validators can cast a vote"
         );
         _;
+    }
+
+    function __LemaValidators_init() public initializer{
+        __Ownable_init();
+        numberOfValidatorAllowed = 10;
+        validatorMinStake = 200;
     }
 
     function getValidators() public view returns (address[] memory) {
