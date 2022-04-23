@@ -1,19 +1,23 @@
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaToken = artifacts.require("LemaToken");
+const LemaChefV2 = artifacts.require("LemaChefV2");
 
 let lemaGovernanceInstance;
 let lemaTokenInstance;
+let lemaStakingInstance;
 
-contract.skip("LemaGovernance", function (accounts) {
+contract("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaStakingInstance = await LemaChefV2.deployed();
     lemaTokenInstance = await LemaToken.deployed();
     assert(lemaTokenInstance !== undefined, "LemaToken contract should be defined");
+    assert(lemaStakingInstance !== undefined, "LemaChef contract should be defined");
     return assert(lemaGovernanceInstance !== undefined, "LemaGovernance contract should be defined");
   });
 
   it("should have treasury address", async () => {
-    const treasuryAddress = await lemaGovernanceInstance.treasury();
+    const treasuryAddress = await lemaStakingInstance.treasury();
     return assert(treasuryAddress === accounts[7], "Treasury address should be defined");
   });
 
@@ -102,9 +106,9 @@ contract.skip("LemaGovernance", function (accounts) {
 
   it("should accept validators", async () => {
     await lemaTokenInstance.mint(accounts[0], 200);
-    await lemaTokenInstance.approve(LemaGovernance.address, 200);
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200);
 
-    await lemaGovernanceInstance.enterStaking(200);
+    await lemaStakingInstance.enterStaking(200);
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[0] });
 
@@ -125,10 +129,10 @@ contract.skip("LemaGovernance", function (accounts) {
 
   it("should let token holders delegate a validator", async () => {
     await lemaTokenInstance.mint(accounts[2], 10);
-    await lemaTokenInstance.approve(LemaGovernance.address, 10, {
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 10, {
       from: accounts[2],
     });
-    await lemaGovernanceInstance.enterStaking(10, { from: accounts[2] });
+    await lemaStakingInstance.enterStaking(10, { from: accounts[2] });
 
     const validators = await lemaGovernanceInstance.getValidators();
 
@@ -159,11 +163,11 @@ contract.skip("LemaGovernance", function (accounts) {
 
   it("should not have a validators's votes delegated to other validators", async () => {
     await lemaTokenInstance.mint(accounts[2], 200);
-    await lemaTokenInstance.approve(LemaGovernance.address, 200, {
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
       from: accounts[2],
     });
 
-    await lemaGovernanceInstance.enterStaking(200, { from: accounts[2] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[2] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[2] });
 
@@ -214,19 +218,21 @@ contract.skip("LemaGovernance", function (accounts) {
   });
 });
 
-contract.skip("LemaGovernance: Slashing", function (accounts) {
+contract("LemaGovernance: Slashing", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaStakingInstance = await LemaChefV2.deployed();
     lemaTokenInstance = await LemaToken.deployed();
     assert(lemaTokenInstance !== undefined, "LemaToken contract should be defined");
+    assert(lemaStakingInstance !== undefined, "LemaChef contract should be defined");
     return assert(lemaGovernanceInstance !== undefined, "LemaGovernance contract should be defined");
   });
 
   it("add a stimulated offline validator", async () => {
     await lemaTokenInstance.mint(accounts[6], 200);
-    await lemaTokenInstance.approve(LemaGovernance.address, 200, { from: accounts[6] });
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, { from: accounts[6] });
 
-    await lemaGovernanceInstance.enterStaking(200, { from: accounts[6] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[6] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[6] });
 
@@ -236,9 +242,9 @@ contract.skip("LemaGovernance: Slashing", function (accounts) {
     const haveCastedVote = await lemaGovernanceInstance.haveCastedVote(accounts[6]);
     assert.equal(haveCastedVote, false);
 
-    const initialStakedAmount = await lemaGovernanceInstance.getStakedAmountInPool(0, accounts[6]);
+    const initialStakedAmount = await lemaStakingInstance.getStakedAmountInPool(0, accounts[6]);
     await lemaGovernanceInstance.startNewGovernance();
-    const finalStakedAmount = await lemaGovernanceInstance.getStakedAmountInPool(0, accounts[6]);
+    const finalStakedAmount = await lemaStakingInstance.getStakedAmountInPool(0, accounts[6]);
     // assert(finalStakedAmount < initialStakedAmount);
     assert.equal(initialStakedAmount.toString(), "200");
     assert.equal(finalStakedAmount.toString(), "186");

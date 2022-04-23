@@ -1,13 +1,13 @@
-const LemaGovernance = artifacts.require("LemaGovernance");
+const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const LemaToken = artifacts.require("LemaToken");
 
 let lemaStakingInstance;
 
-contract.skip("LemaStaking", function (accounts) {
+contract("LemaStaking", function (accounts) {
   it("should assert true", async () => {
-    lemaStakingInstance = await LemaGovernance.deployed();
-    return assert(lemaStakingInstance !== undefined, "LemaGovernance contract should be defined");
+    lemaStakingInstance = await LemaChefV2.deployed();
+    return assert(lemaStakingInstance !== undefined, "LemaChefV2 contract should be defined");
   });
 
   it("should have balance", async () => {

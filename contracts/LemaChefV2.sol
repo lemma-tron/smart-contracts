@@ -9,13 +9,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./lib/VotingPower.sol";
 
 import "./LemaToken.sol";
-import "./LemaValidators.sol";
-import "./LemaVoters.sol";
+import "./LemaGovernance.sol";
 
 // Master Contract of Lemmatron
-abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
+contract LemaChefV2 is OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using SafeERC20Upgradeable for LemaToken;
 
     // Info of each user.
     struct UserInfo {
@@ -52,6 +52,7 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
     string public name;
 
     LemaToken public lemaToken;
+    LemaGovernance public lemaGovernance;
 
     // Lema tokens created per block.
     uint256 public lemaPerBlockForValidator;
@@ -105,13 +106,12 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function __LemaChef_init(
+    function initialize(
         LemaToken _lemaToken,
         address _treasury,
         uint256 _startBlock
     ) public initializer {
         __Ownable_init();
-        __LemaValidators_init();
         lemaToken = _lemaToken;
         treasury = _treasury;
         // lemaPerBlock = _lemaPerBlock;
@@ -135,6 +135,10 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
         penaltyFeeRate2 = 15; // fee if last deposited is > 4 weeks (always implemented)
         penaltyPeriod = 4 weeks;
+    }
+
+    function updateLemaGovernanceAddress(LemaGovernance _lemaGovernanceAddress) public onlyOwner {
+        lemaGovernance = _lemaGovernanceAddress;
     }
 
     function updateMultiplier(uint256 multiplierNumber) external onlyOwner {
@@ -286,7 +290,7 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         //getting the accumulated lema per share in that pool
         uint256 accLEMAPerShare = 0;
         uint256 lemaPerBlock = 0;
-        if (getValidatorsExists(_user)) {
+        if (lemaGovernance.getValidatorsExists(_user)) {
             accLEMAPerShare = pool.accLEMAPerShareForValidator;
             lemaPerBlock = lemaPerBlockForValidator;
         } else {
@@ -399,7 +403,7 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         view
         returns (uint256)
     {
-        if (getValidatorsExists(msg.sender)) {
+        if (lemaGovernance.getValidatorsExists(msg.sender)) {
             return pool.accLEMAPerShareForValidator;
         } else {
             return pool.accLEMAPerShareForNominator;
@@ -432,7 +436,8 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
             }
         }
         if (_amount > 0) {
-            pool.lpToken.safeTransferFrom(
+            // pool.lpToken.safeTransferFrom(
+            pool.lpToken.transferFrom(
                 address(msg.sender),
                 address(this),
                 _amount
@@ -451,16 +456,7 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         emit Deposit(msg.sender, _pid, _amount);
     }
 
-    function applyForValidator() public virtual override {
-        super.applyForValidator();
-        uint256 lemaStaked = getStakedAmountInPool(0, msg.sender);
-        require(
-            lemaStaked >= getValidatorsMinStake(),
-            "Stake not enough to become validator"
-        );
-    }
-
-    function getVotingPower(address _user) internal view returns (uint256) {
+    function getVotingPower(address _user) public view returns (uint256) {
         uint256 lemaStaked = getStakedAmountInPool(0, _user);
         require(lemaStaked > 0, "LemaChefV2: Stake not enough to vote");
 
@@ -477,18 +473,6 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         );
 
         return votingPower;
-    }
-
-    function delegateValidator(address validator) public virtual override {
-        require(
-            getValidatorsExists(validator),
-            "LemaGovernance: Validator is not a valid"
-        );
-        super.delegateValidator(validator);
-
-        uint256 votingPower = getVotingPower(msg.sender);
-        LemaVoters.vestVotes(votingPower);
-        LemaValidators.vestVotes(validator, votingPower);
     }
 
     // Withdraw LP tokens from LemaChef.
@@ -576,7 +560,8 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
             }
         }
         if (_amount > 0) {
-            pool.lpToken.safeTransferFrom(
+            // pool.lpToken.safeTransferFrom(
+            pool.lpToken.transferFrom(
                 address(msg.sender),
                 address(this),
                 _amount
@@ -608,8 +593,8 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
         }
         if (_amount > 0) {
             // check for validator
-            if (_amount > getValidatorsMinStake()) {
-                removeFromValidator(msg.sender);
+            if (_amount > lemaGovernance.getValidatorsMinStake()) {
+                lemaGovernance.leftStakingAsValidator(msg.sender);
             }
 
             user.amount = user.amount.sub(_amount);
@@ -631,5 +616,80 @@ abstract contract LemaChefV2 is OwnableUpgradeable, LemaValidators, LemaVoters {
             transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
         user.rewardDebt = rewardDebt;
+    }
+
+    function slashOfflineValidators(uint256 slashingParameter, address[] memory offlineValidators, address[] memory onlineValidators) public {
+        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can slash offline validators");
+        if (slashingParameter > 0) {
+            for (uint256 i = 0; i < offlineValidators.length; i++) {
+                address user = offlineValidators[i];
+                uint256 userStake = getStakedAmountInPool(0, user);
+                uint256 toBeSlashedAmount = userStake
+                    .mul(7)
+                    .mul(slashingParameter)
+                    .div(10000);
+
+                safeLEMATransfer(treasury, toBeSlashedAmount);
+
+                UserInfo storage userData = userInfo[0][user];
+                userData.amount = userData.amount.sub(toBeSlashedAmount);
+            }
+        }
+
+        // Reducing multiplier
+        for (uint256 i = 0; i < offlineValidators.length; i++) {
+            address user = offlineValidators[i];
+            UserInfo storage userData = userInfo[0][user];
+            userData.multiplier = 5000;
+        }
+
+        // Recovering multiplier
+        for (uint256 i = 0; i < onlineValidators.length; i++) {
+            address user = onlineValidators[i];
+            UserInfo storage userData = userInfo[0][user];
+            userData.multiplier = 10000;
+        }
+    }
+
+    function evaluateThreeValidatorsNominatedByNominator(uint256 slashingParameter, address[] memory nominators) public {
+        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can evaluate three validators nominated by nominator");
+        for (uint256 i = 0; i < nominators.length; i++) {
+            address nominator = nominators[i];
+            UserInfo storage userData = userInfo[0][nominator];
+            address[3]
+                memory validatorsNominatedByNominator = lemaGovernance.getValidatorsNominatedByNominator(
+                    nominator
+                );
+
+            for (uint256 j = 0; j < 3; j++) {
+                address validator = validatorsNominatedByNominator[j];
+                if (lemaGovernance.haveCastedVote(validator)) {
+                    userData.multiplier = 10000;
+
+                    if (j != 0) {
+                        lemaGovernance.vestVotesToDifferentValidator(
+                            nominator,
+                            validatorsNominatedByNominator[0],
+                            validator
+                        );
+                    }
+
+                    return;
+                }
+            }
+            userData.multiplier = 5000;
+
+            if (slashingParameter > 0) {
+                uint256 userStake = getStakedAmountInPool(0, nominator);
+                uint256 toBeSlashedAmount = userStake
+                    .mul(7)
+                    .mul(slashingParameter)
+                    .div(10000);
+
+                safeLEMATransfer(treasury, toBeSlashedAmount);
+
+                userData.amount = userData.amount.sub(toBeSlashedAmount);
+            }
+        }
     }
 }

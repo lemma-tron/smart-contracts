@@ -154,7 +154,6 @@ abstract contract LemaValidators is OwnableUpgradeable {
 
     function removeFromValidator(address _validator)
         internal
-        validValidatorsOnly
     {
         removeFromValidatorByIndex(getValidatorIndex(_validator));
     }
@@ -184,7 +183,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
         voteCount[validator] -= votingPower[msg.sender];
     }
 
-    function vestVotesToDifferentValidator(
+    function _vestVotesToDifferentValidator(
         address nominator,
         address previousValidator,
         address newValidator

@@ -2,11 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./LemaChefV2.sol";
+import "./LemaValidators.sol";
+import "./LemaVoters.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is LemaChefV2 {
+contract LemaGovernance is OwnableUpgradeable, LemaValidators, LemaVoters {
     using SafeMathUpgradeable for uint256;
 
     // Info of each project.
@@ -38,6 +41,15 @@ contract LemaGovernance is LemaChefV2 {
 
     Governance[] public pastGovernances;
     Governance public currentGovernance;
+    LemaChefV2 public lemaChef;
+
+    modifier onlyLemaChef() {
+        require(
+            msg.sender == address(lemaChef),
+            "LemaGovernance: Only LemaChef can perform this action"
+        );
+        _;
+    }
 
     modifier runningGovernanceOnly() {
         require(
@@ -59,16 +71,16 @@ contract LemaGovernance is LemaChefV2 {
     function initialize(
         uint256 _governanceVotingStart,
         uint256 _governanceVotingEnd,
-        LemaToken _lemaToken,
-        address _treasury,
-        uint256 _startBlock
+        LemaChefV2 _lemaChef
     ) public initializer {
         __Ownable_init();
-        __LemaChef_init(_lemaToken, _treasury, _startBlock);
+        __LemaValidators_init();
+        // __LemaChef_init(_lemaToken, _treasury, _startBlock);
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
+        lemaChef = _lemaChef;
     }
-
+    
     function getSlashingParameter() internal view returns (uint256) {
         address[] memory currentValidators = getValidators();
         address[]
@@ -86,90 +98,36 @@ contract LemaGovernance is LemaChefV2 {
     }
 
     function slashOfflineValidators() internal {
+        uint256 slashingParameter = getSlashingParameter();
         address[]
             memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
-        uint256 slashingParameter = getSlashingParameter();
-
-        if (slashingParameter > 0) {
-            for (uint256 i = 0; i < offlineValidators.length; i++) {
-                address user = offlineValidators[i];
-                uint256 userStake = getStakedAmountInPool(0, user);
-                uint256 toBeSlashedAmount = userStake
-                    .mul(7)
-                    .mul(slashingParameter)
-                    .div(10000);
-
-                safeLEMATransfer(treasury, toBeSlashedAmount);
-
-                UserInfo storage userData = userInfo[0][user];
-                userData.amount = userData.amount.sub(toBeSlashedAmount);
-            }
-        }
-
-        // Reducing multiplier
-        for (uint256 i = 0; i < offlineValidators.length; i++) {
-            address user = offlineValidators[i];
-            UserInfo storage userData = userInfo[0][user];
-            userData.multiplier = 5000;
-        }
-
-        // Recovering multiplier
         address[] memory onlineValidators = getValidatorsWhoHaveCastedVotes();
-        for (uint256 i = 0; i < onlineValidators.length; i++) {
-            address user = onlineValidators[i];
-            UserInfo storage userData = userInfo[0][user];
-            userData.multiplier = 10000;
-        }
+
+        lemaChef.slashOfflineValidators(slashingParameter, offlineValidators, onlineValidators);
     }
 
     function evaluateThreeValidatorsNominatedByNominator() internal {
         address[] memory nominators = getVoters();
-
         uint256 slashingParameter = getSlashingParameter();
 
-        for (uint256 i = 0; i < nominators.length; i++) {
-            address nominator = nominators[i];
-            UserInfo storage userData = userInfo[0][nominator];
-            address[3]
-                memory validatorsNominatedByNominator = getValidatorsNominatedByNominator(
-                    nominator
-                );
+        lemaChef.evaluateThreeValidatorsNominatedByNominator(slashingParameter, nominators);
+    }
 
-            for (uint256 j = 0; j < 3; j++) {
-                address validator = validatorsNominatedByNominator[j];
-                if (haveCastedVote(validator)) {
-                    userData.multiplier = 10000;
+    function vestVotesToDifferentValidator(address nominator,
+        address previousValidator,
+        address newValidator
+    ) public onlyLemaChef {
+        _vestVotesToDifferentValidator(nominator, previousValidator, newValidator);
+    }
 
-                    if (j != 0) {
-                        vestVotesToDifferentValidator(
-                            nominator,
-                            validatorsNominatedByNominator[0],
-                            validator
-                        );
-                    }
-
-                    return;
-                }
-            }
-            userData.multiplier = 5000;
-
-            if (slashingParameter > 0) {
-                uint256 userStake = getStakedAmountInPool(0, nominator);
-                uint256 toBeSlashedAmount = userStake
-                    .mul(7)
-                    .mul(slashingParameter)
-                    .div(10000);
-
-                safeLEMATransfer(treasury, toBeSlashedAmount);
-
-                userData.amount = userData.amount.sub(toBeSlashedAmount);
-            }
-        }
+    // To be called at the end of a Governance period
+    function applySlashing() internal onlyOwner {        
+        slashOfflineValidators();
+        evaluateThreeValidatorsNominatedByNominator();
     }
 
     function startNewGovernance() external onlyOwner {
-        slashOfflineValidators();
-        evaluateThreeValidatorsNominatedByNominator();
+        applySlashing();
         currentGovernance.validators = getValidators();
         currentGovernance.voters = getVoters();
         pastGovernances.push(currentGovernance);
@@ -233,7 +191,15 @@ contract LemaGovernance is LemaChefV2 {
         override
         runningGovernanceOnly
     {
+        require(
+            getValidatorsExists(validator),
+            "LemaGovernance: Validator is not a valid"
+        );
         super.delegateValidator(validator);
+
+        uint256 votingPower = lemaChef.getVotingPower(msg.sender);
+        LemaVoters.vestVotes(votingPower);
+        LemaValidators.vestVotes(validator, votingPower);
     }
 
     function applyForValidator() public virtual override {
@@ -241,24 +207,20 @@ contract LemaGovernance is LemaChefV2 {
             withdrawVotes(getValidatorsNominatedByNominator(msg.sender)[0]); // using 0 index as votes were accumulated with the first validator among the three returned ones
 
             unDelegateValidator();
-
-            for (
-                uint256 index = 0;
-                index < currentGovernance.validators.length;
-                index++
-            ) {
-                if (currentGovernance.validators[index] == msg.sender) {
-                    currentGovernance.validators[index] = currentGovernance
-                        .validators[currentGovernance.validators.length - 1];
-                    currentGovernance.validators.pop();
-                    break;
-                }
-            }
         }
         super.applyForValidator();
+        uint256 lemaStaked = lemaChef.getStakedAmountInPool(0, msg.sender);
+        require(
+            lemaStaked >= getValidatorsMinStake(),
+            "Stake not enough to become validator"
+        );
     }
 
     function castVote(uint256 index) external validValidatorsOnly {
+        require(
+            getValidatorsExists(msg.sender),
+            "LemaGovernance: Only validators can cast a vote"
+        );
         require(
             !haveCastedVote(msg.sender),
             "LemaGovernance: You have already voted"
@@ -293,4 +255,9 @@ contract LemaGovernance is LemaChefV2 {
         currentGovernance.mostVotedProjectIndex = mostVotedIndex;
         currentGovernance.winningVoteCount = mostVotes;
     }
+
+    function leftStakingAsValidator(address _validator) external onlyLemaChef {
+        removeFromValidator(_validator);
+    }    
+
 }

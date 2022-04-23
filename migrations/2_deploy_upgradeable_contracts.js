@@ -4,6 +4,8 @@ const BEP20 = artifacts.require("MockBEP20");
 const LemaToken = artifacts.require("LemaToken");
 const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
 const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
+const LemaChefV2 = artifacts.require("LemaChefV2");
+const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 
 module.exports = async function (deployer, network, accounts) {
@@ -31,23 +33,33 @@ module.exports = async function (deployer, network, accounts) {
     { deployer, initializer: "initialize" }
   );
 
-  // let today = new Date();
-  // today.setUTCHours(0, 0, 0, 0);
+  const lemaChefInstance = await deployProxy(
+    LemaChefV2,
+    [
+      lemaTokenInstance.address, // _lemaToken
+      accounts[7], // _treasury
+      0, // _startBlock
+    ],
+    { deployer, initializer: "initialize" }
+  );
 
-  // const startDate = today / 1000;
-  // const endDate = today.setDate(today.getDate() + 90) / 1000;
+  let today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
 
-  // await deployProxy(
-  //   LemaGovernance,
-  //   [
-  //     startDate, // _governanceVotingStart
-  //     endDate, // _governanceVotingEnd
-  //     lemaTokenInstance.address, // _lemaToken
-  //     accounts[7], // _treasury
-  //     0, // _startBlock
-  //   ],
-  //   { deployer, initializer: "initialize" }
-  // );
+  const startDate = today / 1000;
+  const endDate = today.setDate(today.getDate() + 90) / 1000;
+
+  const lemaGovernanceInstance = await deployProxy(
+    LemaGovernance,
+    [
+      startDate, // _governanceVotingStart
+      endDate, // _governanceVotingEnd
+      lemaChefInstance.address, // LemaChef address
+    ],
+    { deployer, initializer: "initialize" }
+  );
+
+  await lemaChefInstance.updateLemaGovernanceAddress(lemaGovernanceInstance.address);
 
   await deployProxy(
     LemaTokenVesting,
@@ -57,7 +69,7 @@ module.exports = async function (deployer, network, accounts) {
       accounts[1], // _privateSale
       accounts[2], // _presale
       accounts[3], // _marketing
-      accounts[4], // LemaGovernance.address, // _stakingIncentiveDiscount
+      lemaChefInstance.address, // _stakingIncentiveDiscount
       accounts[5], // _advisor
       accounts[6], // _team
       accounts[7], // _treasury
