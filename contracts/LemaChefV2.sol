@@ -135,7 +135,10 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         penaltyPeriod = 4 weeks;
     }
 
-    function updateLemaGovernanceAddress(LemaGovernance _lemaGovernanceAddress) public onlyOwner {
+    function updateLemaGovernanceAddress(LemaGovernance _lemaGovernanceAddress)
+        public
+        onlyOwner
+    {
         lemaGovernance = _lemaGovernanceAddress;
     }
 
@@ -614,8 +617,15 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         user.rewardDebt = rewardDebt;
     }
 
-    function slashOfflineValidators(uint256 slashingParameter, address[] memory offlineValidators, address[] memory onlineValidators) public {
-        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can slash offline validators");
+    function slashOfflineValidators(
+        uint256 slashingParameter,
+        address[] memory offlineValidators,
+        address[] memory onlineValidators
+    ) public {
+        require(
+            msg.sender == address(lemaGovernance),
+            "Only LemaGovernance can slash offline validators"
+        );
         if (slashingParameter > 0) {
             for (uint256 i = 0; i < offlineValidators.length; i++) {
                 address user = offlineValidators[i];
@@ -647,15 +657,19 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         }
     }
 
-    function evaluateThreeValidatorsNominatedByNominator(uint256 slashingParameter, address[] memory nominators) public {
-        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can evaluate three validators nominated by nominator");
+    function evaluateThreeValidatorsNominatedByNominator(
+        uint256 slashingParameter,
+        address[] memory nominators
+    ) public {
+        require(
+            msg.sender == address(lemaGovernance),
+            "Only LemaGovernance can evaluate three validators nominated by nominator"
+        );
         for (uint256 i = 0; i < nominators.length; i++) {
             address nominator = nominators[i];
             UserInfo storage userData = userInfo[0][nominator];
-            address[3]
-                memory validatorsNominatedByNominator = lemaGovernance.getValidatorsNominatedByNominator(
-                    nominator
-                );
+            address[3] memory validatorsNominatedByNominator = lemaGovernance
+                .getValidatorsNominatedByNominator(nominator);
 
             for (uint256 j = 0; j < 3; j++) {
                 address validator = validatorsNominatedByNominator[j];

@@ -36,7 +36,10 @@ contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
     event RefundsEnabled();
     event Refunded(address indexed beneficiary, uint256 busdAmount);
 
-    function initialize(address _wallet, IERC20Upgradeable _busd) public initializer {
+    function initialize(address _wallet, IERC20Upgradeable _busd)
+        public
+        initializer
+    {
         __Ownable_init();
         wallet = _wallet;
         busd = _busd;

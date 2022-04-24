@@ -107,7 +107,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         wallet = _wallet;
         vault = _vault;
         startTime = 1649203200; // Apr 6th 2022, 12 am (UTC)
-        endTime = 1653091200;   // May 21st 2022, 12 am (UTC)
+        endTime = 1653091200; // May 21st 2022, 12 am (UTC)
         startingPrice = 0.00005 ether;
         closingPrice = 0.00010 ether;
         tokenClaimable = false;
@@ -158,7 +158,10 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     /// @notice Allow to update Presale start date
     /// @param _startTime Starttime of Presale
     function setStartDate(uint256 _startTime) public onlyOwner {
-        require(block.timestamp < _startTime, "Can only update future start time");
+        require(
+            block.timestamp < _startTime,
+            "Can only update future start time"
+        );
         require(endTime > _startTime, "End time should be greater");
         startTime = _startTime;
     }

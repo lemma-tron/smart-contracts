@@ -22,7 +22,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
         _;
     }
 
-    function __LemaValidators_init() public initializer{
+    function __LemaValidators_init() public initializer {
         __Ownable_init();
         numberOfValidatorAllowed = 10;
         validatorMinStake = 200;
@@ -152,9 +152,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
         return 0;
     }
 
-    function removeFromValidator(address _validator)
-        internal
-    {
+    function removeFromValidator(address _validator) internal {
         removeFromValidatorByIndex(getValidatorIndex(_validator));
     }
 

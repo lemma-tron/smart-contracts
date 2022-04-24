@@ -10,7 +10,12 @@ import "./LemaValidators.sol";
 import "./LemaVoters.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is Initializable, OwnableUpgradeable, LemaValidators, LemaVoters {
+contract LemaGovernance is
+    Initializable,
+    OwnableUpgradeable,
+    LemaValidators,
+    LemaVoters
+{
     using SafeMathUpgradeable for uint256;
 
     // Info of each project.
@@ -78,7 +83,7 @@ contract LemaGovernance is Initializable, OwnableUpgradeable, LemaValidators, Le
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
         lemaChef = _lemaChef;
     }
-    
+
     function getSlashingParameter() internal view returns (uint256) {
         address[] memory currentValidators = getValidators();
         address[]
@@ -101,25 +106,37 @@ contract LemaGovernance is Initializable, OwnableUpgradeable, LemaValidators, Le
             memory offlineValidators = getValidatorsWhoHaveNotCastedVotes();
         address[] memory onlineValidators = getValidatorsWhoHaveCastedVotes();
 
-        lemaChef.slashOfflineValidators(slashingParameter, offlineValidators, onlineValidators);
+        lemaChef.slashOfflineValidators(
+            slashingParameter,
+            offlineValidators,
+            onlineValidators
+        );
     }
 
     function evaluateThreeValidatorsNominatedByNominator() internal {
         address[] memory nominators = getVoters();
         uint256 slashingParameter = getSlashingParameter();
 
-        lemaChef.evaluateThreeValidatorsNominatedByNominator(slashingParameter, nominators);
+        lemaChef.evaluateThreeValidatorsNominatedByNominator(
+            slashingParameter,
+            nominators
+        );
     }
 
-    function vestVotesToDifferentValidator(address nominator,
+    function vestVotesToDifferentValidator(
+        address nominator,
         address previousValidator,
         address newValidator
     ) public onlyLemaChef {
-        _vestVotesToDifferentValidator(nominator, previousValidator, newValidator);
+        _vestVotesToDifferentValidator(
+            nominator,
+            previousValidator,
+            newValidator
+        );
     }
 
     // To be called at the end of a Governance period
-    function applySlashing() internal onlyOwner {        
+    function applySlashing() internal onlyOwner {
         slashOfflineValidators();
         evaluateThreeValidatorsNominatedByNominator();
     }
@@ -256,6 +273,5 @@ contract LemaGovernance is Initializable, OwnableUpgradeable, LemaValidators, Le
 
     function leftStakingAsValidator(address _validator) external onlyLemaChef {
         removeFromValidator(_validator);
-    }    
-
+    }
 }
