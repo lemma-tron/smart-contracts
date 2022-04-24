@@ -437,7 +437,8 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
             }
         }
         if (_amount > 0) {
-            pool.lpToken.safeTransferFrom(
+            // pool.lpToken.safeTransferFrom(
+            pool.lpToken.transferFrom(
                 address(msg.sender),
                 address(this),
                 _amount
@@ -560,7 +561,8 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
             }
         }
         if (_amount > 0) {
-            pool.lpToken.safeTransferFrom(
+            // pool.lpToken.safeTransferFrom(
+            pool.lpToken.transferFrom(
                 address(msg.sender),
                 address(this),
                 _amount
