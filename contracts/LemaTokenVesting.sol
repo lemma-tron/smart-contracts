@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -8,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./LemaToken.sol";
 
-contract LemaTokenVesting is OwnableUpgradeable {
+contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
     LemaToken public lemaToken;
@@ -36,9 +37,6 @@ contract LemaTokenVesting is OwnableUpgradeable {
     address public treasury;
 
     uint256 private contractDeployedTimestamp;
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
 
     function initialize(
         LemaToken _lemaToken,

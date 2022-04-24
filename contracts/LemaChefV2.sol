@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -12,7 +13,7 @@ import "./LemaToken.sol";
 import "./LemaGovernance.sol";
 
 // Master Contract of Lemmatron
-contract LemaChefV2 is OwnableUpgradeable {
+contract LemaChefV2 is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using SafeERC20Upgradeable for LemaToken;
@@ -102,9 +103,6 @@ contract LemaChefV2 is OwnableUpgradeable {
         // So to get current day's index counting from Saturday as 0,
         // we are subtracting 2 from dayCount and modulo 7.
     }
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
 
     function initialize(
         LemaToken _lemaToken,

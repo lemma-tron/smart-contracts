@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 // This is Lemmatron Governance Token
-contract LemaToken is ERC20Upgradeable, OwnableUpgradeable {
+contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
     uint256 private _cap;
     address public burnerAddress;
     address public lemaChefAddress;
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
 
     function initialize(address _burnerAddress) public initializer {
         __ERC20_init("Lema Token", "LEMA");

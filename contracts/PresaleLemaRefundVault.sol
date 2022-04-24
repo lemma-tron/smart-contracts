@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
@@ -12,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
  * is in progress. Supports refunding the money if presale fails,
  * and forwarding it if presale is successful.
  */
-contract PresaleLemaRefundVault is OwnableUpgradeable {
+contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -34,9 +35,6 @@ contract PresaleLemaRefundVault is OwnableUpgradeable {
     event Closed();
     event RefundsEnabled();
     event Refunded(address indexed beneficiary, uint256 busdAmount);
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
 
     function initialize(address _wallet, IERC20Upgradeable _busd) public initializer {
         __Ownable_init();

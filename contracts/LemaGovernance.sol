@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -9,7 +10,7 @@ import "./LemaValidators.sol";
 import "./LemaVoters.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is OwnableUpgradeable, LemaValidators, LemaVoters {
+contract LemaGovernance is Initializable, OwnableUpgradeable, LemaValidators, LemaVoters {
     using SafeMathUpgradeable for uint256;
 
     // Info of each project.
@@ -64,9 +65,6 @@ contract LemaGovernance is OwnableUpgradeable, LemaValidators, LemaVoters {
         );
         _;
     }
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
 
     function initialize(
         uint256 _governanceVotingStart,
