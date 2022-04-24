@@ -13,23 +13,39 @@ module.exports = async function (deployer, network, accounts) {
   let busdAddress;
   let busdInstance;
   if (isDev) {
-    busdInstance = await deployProxy(BEP20, ["BUSD", "BUSD", "200000000000000000000000"], {
-      deployer,
-      initializer: "initialize",
-    });
+    busdInstance = await deployProxy(
+      BEP20,
+      ["BUSD", "BUSD", "200000000000000000000000"],
+      {
+        deployer,
+        initializer: "initialize",
+      }
+    );
     busdAddress = busdInstance.address;
   } else {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
-  const lemaTokenInstance = await deployProxy(LemaToken, [accounts[0]], { deployer, initializer: "initialize" });
-  const presaleLemaRefundVaultInstance = await deployProxy(PresaleLemaRefundVault, [accounts[0], busdAddress], {
+  const lemaTokenInstance = await deployProxy(LemaToken, [accounts[0]], {
     deployer,
     initializer: "initialize",
   });
+  const presaleLemaRefundVaultInstance = await deployProxy(
+    PresaleLemaRefundVault,
+    [accounts[0], busdAddress],
+    {
+      deployer,
+      initializer: "initialize",
+    }
+  );
   const presaleLemaInstance = await deployProxy(
     PresaleLemaV2,
-    [lemaTokenInstance.address, busdAddress, accounts[0], presaleLemaRefundVaultInstance.address],
+    [
+      lemaTokenInstance.address,
+      busdAddress,
+      accounts[0],
+      presaleLemaRefundVaultInstance.address,
+    ],
     { deployer, initializer: "initialize" }
   );
 
@@ -59,7 +75,9 @@ module.exports = async function (deployer, network, accounts) {
     { deployer, initializer: "initialize" }
   );
 
-  await lemaChefInstance.updateLemaGovernanceAddress(lemaGovernanceInstance.address);
+  await lemaChefInstance.updateLemaGovernanceAddress(
+    lemaGovernanceInstance.address
+  );
 
   await deployProxy(
     LemaTokenVesting,
@@ -77,7 +95,13 @@ module.exports = async function (deployer, network, accounts) {
     { deployer, initializer: "initialize" }
   );
 
-  await presaleLemaRefundVaultInstance.transferOwnership(presaleLemaInstance.address);
+  await presaleLemaRefundVaultInstance.transferOwnership(
+    presaleLemaInstance.address
+  );
 
-  isDev && (await busdInstance.approve(presaleLemaRefundVaultInstance.address, "1000000000000000000000000"));
+  isDev &&
+    (await busdInstance.approve(
+      presaleLemaRefundVaultInstance.address,
+      "1000000000000000000000000"
+    ));
 };
