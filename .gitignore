@@ -4,4 +4,4 @@ build
 coverage
 coverage.json
 .vscode
-.openzeppelin
+.openzeppelin/unknown-*.json

@@ -13,12 +13,15 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     uint256 private _cap;
     address public burnerAddress;
     address public lemaChefAddress;
+    address public treasuryAddress;
+    uint256 public taxRate; // in percentage, 10000 = 100%
 
-    function initialize(address _burnerAddress) public initializer {
+    function initialize(address _burnerAddress, address _treasuryAddress) public initializer {
         __ERC20_init("Lema Token", "LEMA");
         __Ownable_init();
         burnerAddress = _burnerAddress;
         _cap = 1e28; //10 billion
+        treasuryAddress = _treasuryAddress;
     }
 
     function getOwner() external view returns (address) {
@@ -74,6 +77,23 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         lemaChefAddress = _newLemaChefAddress;
     }
 
+    // update tax rate, can only be updated by owner
+    function updateTaxRate(uint256 _taxRate)
+        public
+        onlyLemaChefOrOwner
+    {
+        require(_taxRate >= 0 && _taxRate <= 10000, "Tax rate must be greater than 0 and less than 10000");
+        taxRate = _taxRate;
+    }
+    
+    // update treasury address, can only be updated by owner
+    function updateTreauryAddress(address _newTreasuryAddress)
+        public
+        onlyLemaChefOrOwner
+    {
+        treasuryAddress = _newTreasuryAddress;
+    }
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner.
     function mint(address _to, uint256 _amount) public onlyOwner {
         require(totalSupply().add(_amount) <= cap(), "LemaToken: Cap exceeded");
@@ -82,5 +102,15 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
 
     function burn(address _from, uint256 _amount) public onlyBurner {
         _burn(_from, _amount);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        uint taxAmount = amount.mul(taxRate).div(10000);
+        super._transfer(from, treasuryAddress, taxAmount);
+        super._transfer(from, to, amount.sub(taxAmount));
     }
 }

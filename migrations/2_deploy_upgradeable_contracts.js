@@ -1,6 +1,6 @@
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
-const BEP20 = artifacts.require("MockBEP20");
+const MockBEP20 = artifacts.require("MockBEP20");
 const LemaToken = artifacts.require("LemaToken");
 const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
 const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
@@ -9,12 +9,12 @@ const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 
 module.exports = async function (deployer, network, accounts) {
-  const isDev = ["test", "development"].includes(network);
+  const isDev = ["develop", "development"].includes(network);
   let busdAddress;
   let busdInstance;
   if (isDev) {
     busdInstance = await deployProxy(
-      BEP20,
+      MockBEP20,
       ["BUSD", "BUSD", "200000000000000000000000"],
       {
         deployer,
@@ -26,10 +26,17 @@ module.exports = async function (deployer, network, accounts) {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
-  const lemaTokenInstance = await deployProxy(LemaToken, [accounts[0]], {
-    deployer,
-    initializer: "initialize",
-  });
+  const lemaTokenInstance = await deployProxy(
+    LemaToken,
+    [
+      accounts[0], // burner address
+      accounts[7], // treasury address
+    ],
+    {
+      deployer,
+      initializer: "initialize",
+    }
+  );
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
     [accounts[0], busdAddress],

@@ -25,4 +25,38 @@ contract("LemaToken", function (accounts) {
     const cap = await lemaTokenInstance.cap();
     assert.equal(cap, 1e28);
   });
+
+  it("should deduct 2% tax on transfer", async () => {
+    await lemaTokenInstance.updateTaxRate(200); // 2%
+
+    await lemaTokenInstance.mint(accounts[0], 10000);
+
+    const initialTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const initialReceiverBalance = (
+      await lemaTokenInstance.balanceOf(accounts[4])
+    ).toNumber();
+
+    // console.log(
+    //   "Initial Balances:",
+    //   initialTreasuryBalance,
+    //   initialReceiverBalance
+    // );
+    assert.equal(initialTreasuryBalance, 0);
+    assert.equal(initialReceiverBalance, 0);
+
+    await lemaTokenInstance.transfer(accounts[4], 10000);
+
+    const finalTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const finalReceiverBalance = (
+      await lemaTokenInstance.balanceOf(accounts[4])
+    ).toNumber();
+
+    // console.log("Final Balances:", finalTreasuryBalance, finalReceiverBalance);
+    assert.equal(finalTreasuryBalance, 200);
+    assert.equal(finalReceiverBalance, 9800);
+  });
 });
