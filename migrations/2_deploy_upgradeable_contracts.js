@@ -7,6 +7,7 @@ const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
+const LemaTaxHandler = artifacts.require("LemaTaxHandler");
 
 module.exports = async function (deployer, network, accounts) {
   const isDev = ["develop", "development"].includes(network);
@@ -26,11 +27,17 @@ module.exports = async function (deployer, network, accounts) {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
+  const lemaTaxHandlerInstance = await deployProxy(LemaTaxHandler, [200], {
+    deployer,
+    initializer: "initialize",
+  });
+
   const lemaTokenInstance = await deployProxy(
     LemaToken,
     [
       accounts[0], // burner address
       accounts[7], // treasury address
+      lemaTaxHandlerInstance.address, // taxHandler address
     ],
     {
       deployer,

@@ -1,10 +1,17 @@
 const LemaToken = artifacts.require("LemaToken");
+const LemaTaxHandler = artifacts.require("LemaTaxHandler");
 
 let lemaTokenInstance;
+let lemaTaxHandlerInstance;
 
 contract("LemaToken", function (accounts) {
   it("should assert true", async () => {
     lemaTokenInstance = await LemaToken.deployed();
+    lemaTaxHandlerInstance = await LemaTaxHandler.deployed();
+    assert(
+      lemaTaxHandlerInstance !== undefined,
+      "LemaTaxHandler contract should be defined"
+    );
     return assert(
       lemaTokenInstance !== undefined,
       "LemaToken contract should be defined"
@@ -26,9 +33,7 @@ contract("LemaToken", function (accounts) {
     assert.equal(cap, 1e28);
   });
 
-  it("should deduct 2% tax on transfer", async () => {
-    await lemaTokenInstance.updateTaxRate(200); // 2%
-
+  it("should deduct 0% tax on transfer", async () => {
     await lemaTokenInstance.mint(accounts[0], 10000);
 
     const initialTreasuryBalance = (
@@ -53,6 +58,40 @@ contract("LemaToken", function (accounts) {
     ).toNumber();
     const finalReceiverBalance = (
       await lemaTokenInstance.balanceOf(accounts[4])
+    ).toNumber();
+
+    // console.log("Final Balances:", finalTreasuryBalance, finalReceiverBalance);
+    assert.equal(finalTreasuryBalance, 0);
+    assert.equal(finalReceiverBalance, 10000);
+  });
+
+  it("should deduct 2% tax on trade", async () => {
+    await lemaTaxHandlerInstance.addExchangePool(accounts[5]);
+
+    await lemaTokenInstance.mint(accounts[0], 10000);
+
+    const initialTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const initialReceiverBalance = (
+      await lemaTokenInstance.balanceOf(accounts[5])
+    ).toNumber();
+
+    // console.log(
+    //   "Initial Balances:",
+    //   initialTreasuryBalance,
+    //   initialReceiverBalance
+    // );
+    assert.equal(initialTreasuryBalance, 0);
+    assert.equal(initialReceiverBalance, 0);
+
+    await lemaTokenInstance.transfer(accounts[5], 10000);
+
+    const finalTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const finalReceiverBalance = (
+      await lemaTokenInstance.balanceOf(accounts[5])
     ).toNumber();
 
     // console.log("Final Balances:", finalTreasuryBalance, finalReceiverBalance);
