@@ -16,6 +16,8 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     /// @notice How much tax to collect in basis points. 10,000 basis points is 100%.
     uint256 public taxBasisPoints;
 
+    address public uniswapV2Router;
+
     /// @notice Emitted when the tax basis points number is updated.
     event TaxBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
 
@@ -30,6 +32,7 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     ) public initializer {
         __Ownable_init();
         taxBasisPoints = initialTaxBasisPoints;
+        uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
     }
 
     /**
@@ -51,6 +54,11 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     ) external view returns (uint256) {
         if (_exempted.contains(benefactor) || _exempted.contains(beneficiary)) {
             return 0;
+        }
+
+        // If the transfer is to or from the uniswapV2Router, the tax is capped at 3% of the amount.
+        if ((beneficiary == uniswapV2Router || benefactor == uniswapV2Router) && taxBasisPoints > 300) {
+            return (amount * 300) / 10000;
         }
 
         // Transactions between regular users (this includes contracts) aren't taxed.

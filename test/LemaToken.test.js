@@ -33,7 +33,7 @@ contract("LemaToken", function (accounts) {
     assert.equal(cap, 1e28);
   });
 
-  it("should deduct 0% tax on transfer", async () => {
+  it("should deduct 0% tax on normal transfers", async () => {
     await lemaTokenInstance.mint(accounts[0], 10000);
 
     const initialTreasuryBalance = (
@@ -65,7 +65,7 @@ contract("LemaToken", function (accounts) {
     assert.equal(finalReceiverBalance, 10000);
   });
 
-  it("should deduct 2% tax on trade", async () => {
+  it("should deduct 5% tax on trade transfers", async () => {
     await lemaTaxHandlerInstance.addExchangePool(accounts[5]);
 
     await lemaTokenInstance.mint(accounts[0], 10000);
@@ -95,7 +95,35 @@ contract("LemaToken", function (accounts) {
     ).toNumber();
 
     // console.log("Final Balances:", finalTreasuryBalance, finalReceiverBalance);
-    assert.equal(finalTreasuryBalance, 200);
-    assert.equal(finalReceiverBalance, 9800);
+    assert.equal(finalTreasuryBalance, 500);
+    assert.equal(finalReceiverBalance, 9500);
+  });
+
+  it("should not deduct more than 3% tax on trade transfers with uniswapV2Router", async () => {
+    const uniswapV2Router = await lemaTaxHandlerInstance.uniswapV2Router();
+
+    await lemaTokenInstance.mint(accounts[0], 10000);
+
+    const initialTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const initialReceiverBalance = (
+      await lemaTokenInstance.balanceOf(uniswapV2Router)
+    ).toNumber();
+
+    assert.equal(initialTreasuryBalance, 500);
+    assert.equal(initialReceiverBalance, 0);
+
+    await lemaTokenInstance.transfer(uniswapV2Router, 10000);
+
+    const finalTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(accounts[7])
+    ).toNumber();
+    const finalReceiverBalance = (
+      await lemaTokenInstance.balanceOf(uniswapV2Router)
+    ).toNumber();
+
+    assert.equal(finalTreasuryBalance, 800);
+    assert.equal(finalReceiverBalance, 9700);
   });
 });

@@ -27,7 +27,7 @@ module.exports = async function (deployer, network, accounts) {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
-  const lemaTaxHandlerInstance = await deployProxy(LemaTaxHandler, [200], {
+  const lemaTaxHandlerInstance = await deployProxy(LemaTaxHandler, [500], {
     deployer,
     initializer: "initialize",
   });
