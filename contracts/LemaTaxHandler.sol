@@ -7,6 +7,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./utils/ExchangePoolProcessor.sol";
 
+/**
+ * @title LemaTaxHandler
+ * @notice This contract contains all the tax related logic for the LemaToken.
+ */
 contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProcessor {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 

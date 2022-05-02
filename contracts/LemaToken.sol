@@ -7,7 +7,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./LemaTaxHandler.sol";
 
-// This is Lemmatron Governance Token
+/**
+ * @title LemaToken
+ * @notice This is Lemmatron Governance Token.
+ */
 contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
@@ -17,6 +20,11 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     address public treasuryAddress;
     LemaTaxHandler public taxHandler;
 
+    /**
+     * @param _burnerAddress Address of the burner.
+     * @param _treasuryAddress Address of the treasury.
+     * @param _taxHandler Address of the LemaTaxHandler contract.
+     */
     function initialize(address _burnerAddress, address _treasuryAddress, LemaTaxHandler _taxHandler) public initializer {
         __ERC20_init("Lema Token", "LEMA");
         __Ownable_init();
@@ -26,10 +34,18 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         taxHandler = _taxHandler;
     }
 
+    /**
+     * @notice Get address of the owner.
+     * @dev Required as per BEP20 standard.
+     * @return Address of the owner.
+     */
     function getOwner() external view returns (address) {
         return owner();
     }
 
+    /**
+     * @dev Returns the maximum amount of tokens that can be minted.
+     */
     function cap() public view virtual returns (uint256) {
         return _cap;
     }
@@ -42,7 +58,7 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Returns the address of the nen chef.
+     * @dev Returns the address of the lema chef.
      */
     function lemaChef() public view virtual returns (address) {
         return lemaChefAddress;
@@ -53,11 +69,6 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         _;
     }
 
-    // modifier onlyOwner() {
-    //     require(msg.sender == owner, "Need Burner !");
-    //     _;
-    // }
-
     modifier onlyLemaChefOrOwner() {
         require(
             msg.sender == lemaChef() || msg.sender == owner(),
@@ -66,12 +77,12 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         _;
     }
 
-    // update burner address, can only be updated by current burner
+    /// @notice Updates burner address. Must only be called by the burner.
     function updateBurnerAddress(address _newBurnerAddress) public onlyBurner {
         burnerAddress = _newBurnerAddress;
     }
 
-    // update lemachef address, can only be updated by owner
+    /// @notice Updates lemachef address. Must only be called by the owner.
     function updateLemaChefAddress(address _newLemaChefAddress)
         public
         onlyLemaChefOrOwner
@@ -79,7 +90,7 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         lemaChefAddress = _newLemaChefAddress;
     }
 
-    // update treasury address, can only be updated by owner
+    /// @notice Updates treasury address. Must only be called by the owner.
     function updateTreauryAddress(address _newTreasuryAddress)
         public
         onlyLemaChefOrOwner

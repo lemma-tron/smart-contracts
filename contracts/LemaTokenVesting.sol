@@ -9,6 +9,12 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./LemaToken.sol";
 
+/**
+ * @title LemaTokenVesting
+ * @notice This contract is used for distributing certain
+ * amount of Lematron tokens within each time period.
+ */
+
 contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
