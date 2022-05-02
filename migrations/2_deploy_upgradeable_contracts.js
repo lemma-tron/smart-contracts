@@ -8,11 +8,13 @@ const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const LemaTaxHandler = artifacts.require("LemaTaxHandler");
+const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
 
 module.exports = async function (deployer, network, accounts) {
   const isDev = ["develop", "development"].includes(network);
   let busdAddress;
   let busdInstance;
+  let treasuryAddress = accounts[7];
   if (isDev) {
     busdInstance = await deployProxy(
       MockBEP20,
@@ -36,7 +38,7 @@ module.exports = async function (deployer, network, accounts) {
     LemaToken,
     [
       accounts[0], // burner address
-      accounts[7], // treasury address
+      treasuryAddress, // treasury address
       lemaTaxHandlerInstance.address, // taxHandler address
     ],
     {
@@ -44,6 +46,26 @@ module.exports = async function (deployer, network, accounts) {
       initializer: "initialize",
     }
   );
+
+  if (isDev) {
+    // const treasuryHandlerAlphaInstance =
+    await deployProxy(
+      TreasuryHandlerAlpha,
+      [
+        treasuryAddress, // treasury address
+        busdAddress, // busd address
+        lemaTokenInstance.address, // lema token address
+        "0x10ED43C718714eb63d5aA57B78B54704E256024E", // router address
+        0, // initial liquidity basis points
+        0, // initial price impact basis points
+      ],
+      {
+        deployer,
+        initializer: "initialize",
+      }
+    );
+  }
+
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
     [accounts[0], busdAddress],
@@ -67,7 +89,7 @@ module.exports = async function (deployer, network, accounts) {
     LemaChefV2,
     [
       lemaTokenInstance.address, // _lemaToken
-      accounts[7], // _treasury
+      treasuryAddress, // _treasury
       0, // _startBlock
     ],
     { deployer, initializer: "initialize" }
@@ -104,7 +126,7 @@ module.exports = async function (deployer, network, accounts) {
       lemaChefInstance.address, // _stakingIncentiveDiscount
       accounts[5], // _advisor
       accounts[6], // _team
-      accounts[7], // _treasury
+      treasuryAddress, // _treasury
     ],
     { deployer, initializer: "initialize" }
   );

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "./utils/ExchangePoolProcessor.sol";
 
@@ -20,7 +21,7 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     /// @notice How much tax to collect in basis points. 10,000 basis points is 100%.
     uint256 public taxBasisPoints;
 
-    address public uniswapV2Router;
+    IUniswapV2Router02 public uniswapV2Router;
 
     /// @notice Emitted when the tax basis points number is updated.
     event TaxBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
@@ -36,7 +37,7 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     ) public initializer {
         __Ownable_init();
         taxBasisPoints = initialTaxBasisPoints;
-        uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+        uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);   // Pancakeswap Router V2
     }
 
     /**
@@ -61,7 +62,7 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
         }
 
         // If the transfer is to or from the uniswapV2Router, the tax is capped at 3% of the amount.
-        if ((beneficiary == uniswapV2Router || benefactor == uniswapV2Router) && taxBasisPoints > 300) {
+        if ((beneficiary == address(uniswapV2Router) || benefactor == address(uniswapV2Router)) && taxBasisPoints > 300) {
             return (amount * 300) / 10000;
         }
 
