@@ -89,6 +89,11 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 amount
     );
 
+    modifier onlyLemaGovernance() {
+        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can perform this action");
+        _;
+    }
+
     modifier fridayOnly() {
         uint256 dayCount = block.timestamp / 1 days;
         uint256 dayOfWeek = (dayCount - 2) % 7;
@@ -133,6 +138,10 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         penaltyFeeRate1 = 20; // withdraw penalty fee if last deposited is < 4 weeks
         penaltyFeeRate2 = 15; // fee if last deposited is > 4 weeks (always implemented)
         penaltyPeriod = 4 weeks;
+    }
+
+    function getCurrentBlock() public view returns (uint256) {
+        return block.number;
     }
 
     function updateLemaGovernanceAddress(LemaGovernance _lemaGovernanceAddress)
@@ -605,7 +614,8 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         emit Withdraw(msg.sender, 0, _amount);
     }
 
-    function withdrawReward(uint256 _pid) external fridayOnly {
+    // function withdrawReward(uint256 _pid) external fridayOnly {
+    function withdrawReward(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount > 0, "withdraw: not good");
@@ -623,7 +633,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 slashingParameter,
         address[] memory offlineValidators,
         address[] memory onlineValidators
-    ) public {
+    ) public onlyLemaGovernance {
         require(
             msg.sender == address(lemaGovernance),
             "Only LemaGovernance can slash offline validators"
@@ -662,7 +672,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     function evaluateThreeValidatorsNominatedByNominator(
         uint256 slashingParameter,
         address[] memory nominators
-    ) public {
+    ) public onlyLemaGovernance {
         require(
             msg.sender == address(lemaGovernance),
             "Only LemaGovernance can evaluate three validators nominated by nominator"
