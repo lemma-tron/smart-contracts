@@ -942,7 +942,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         }
     }
 
-    function vestInitialTokens() public onlyOwner {
+    function vestTokens() public onlyOwner {
         release(initialLiquidity);
         release(privateSale);
         release(publicSale);
