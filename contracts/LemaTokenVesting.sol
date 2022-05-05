@@ -42,7 +42,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     address public team;
     address public treasury;
 
-    uint256 private contractDeployedTimestamp;
+    uint256 private vestingTimestamp;
 
     function initialize(
         LemaToken _lemaToken,
@@ -66,7 +66,53 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         team = _team;
         treasury = _treasury;
 
-        contractDeployedTimestamp = block.timestamp;
+        // Thursday, June 16, 2022 12:00:00 AM (GMT)
+        vestingTimestamp = 1655337600;
+    }
+
+    // update initialLiquidity address
+    function updateInitialLiquidityAddress(address _initialLiquidity) public onlyOwner {
+        initialLiquidity = _initialLiquidity;
+    }
+
+    // update privatesale address
+    function updatePrivateSaleAddress(address _privateSale) public onlyOwner {
+        privateSale = _privateSale;
+    }
+
+    // update publicsale address
+    function updatePublicSaleAddress(address _publicSale) public onlyOwner {
+        publicSale = _publicSale;
+    }
+
+    // update marketing address
+    function updateMarketingAddress(address _marketing) public onlyOwner {
+        marketing = _marketing;
+    }
+
+    // update stakingIncentiveDiscount address
+    function updateStakingIncentiveDiscountAddress(address _stakingIncentiveDiscount) public onlyOwner {
+        stakingIncentiveDiscount = _stakingIncentiveDiscount;
+    }
+
+    // update advisor address
+    function updateAdvisorAddress(address _advisor) public onlyOwner {
+        advisor = _advisor;
+    }
+
+    // update team address
+    function updateTeamAddress(address _team) public onlyOwner {
+        team = _team;
+    }
+
+    // update treasury address
+    function updateTreasuryAddress(address _treasury) public onlyOwner {
+        treasury = _treasury;
+    }
+
+    // update vestingTimestamp
+    function updateVestingTimestamp(uint256 _vestingTimestamp) public onlyOwner {
+        vestingTimestamp = _vestingTimestamp;
     }
 
     function addToTokenVesting(
@@ -85,7 +131,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             initialLiquidity,
             500000000e18,
-            contractDeployedTimestamp,
+            vestingTimestamp,
             12 weeks
         );
     }
@@ -95,31 +141,31 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             privateSale,
             100000000e18,
-            contractDeployedTimestamp + 12 weeks,
+            vestingTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
             privateSale,
             100000000e18,
-            contractDeployedTimestamp + 24 weeks,
+            vestingTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
             privateSale,
             100000000e18,
-            contractDeployedTimestamp + 36 weeks,
+            vestingTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
             privateSale,
             100000000e18,
-            contractDeployedTimestamp + 48 weeks,
+            vestingTimestamp + 48 weeks,
             12 weeks
         );
         addToTokenVesting(
             privateSale,
             100000000e18,
-            contractDeployedTimestamp + 60 weeks,
+            vestingTimestamp + 60 weeks,
             12 weeks
         );
     }
@@ -129,31 +175,31 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             publicSale,
             100000000e18,
-            contractDeployedTimestamp,
+            vestingTimestamp,
             12 weeks
         );
         addToTokenVesting(
             publicSale,
             100000000e18,
-            contractDeployedTimestamp + 12 weeks,
+            vestingTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
             publicSale,
             100000000e18,
-            contractDeployedTimestamp + 24 weeks,
+            vestingTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
             publicSale,
             100000000e18,
-            contractDeployedTimestamp + 36 weeks,
+            vestingTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
             publicSale,
             100000000e18,
-            contractDeployedTimestamp + 48 weeks,
+            vestingTimestamp + 48 weeks,
             12 weeks
         );
     }
@@ -163,73 +209,73 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp,
+            vestingTimestamp,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 36 weeks,
+            vestingTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 60 weeks,
+            vestingTimestamp + 60 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 84 weeks,
+            vestingTimestamp + 84 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 108 weeks,
+            vestingTimestamp + 108 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 132 weeks,
+            vestingTimestamp + 132 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 156 weeks,
+            vestingTimestamp + 156 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 180 weeks,
+            vestingTimestamp + 180 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 204 weeks,
+            vestingTimestamp + 204 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 228 weeks,
+            vestingTimestamp + 228 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 252 weeks,
+            vestingTimestamp + 252 weeks,
             12 weeks
         );
         addToTokenVesting(
             marketing,
             125000000e18,
-            contractDeployedTimestamp + 276 weeks,
+            vestingTimestamp + 276 weeks,
             12 weeks
         );
     }
@@ -242,247 +288,247 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             stakingIncentiveDiscount,
             100000000e18,
-            contractDeployedTimestamp,
+            vestingTimestamp,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             100000000e18,
-            contractDeployedTimestamp + 12 weeks,
+            vestingTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             100000000e18,
-            contractDeployedTimestamp + 24 weeks,
+            vestingTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             100000000e18,
-            contractDeployedTimestamp + 36 weeks,
+            vestingTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             87500000e18,
-            contractDeployedTimestamp + 48 weeks,
+            vestingTimestamp + 48 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             87500000e18,
-            contractDeployedTimestamp + 60 weeks,
+            vestingTimestamp + 60 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             87500000e18,
-            contractDeployedTimestamp + 72 weeks,
+            vestingTimestamp + 72 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             87500000e18,
-            contractDeployedTimestamp + 84 weeks,
+            vestingTimestamp + 84 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             75000000e18,
-            contractDeployedTimestamp + 96 weeks,
+            vestingTimestamp + 96 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             75000000e18,
-            contractDeployedTimestamp + 108 weeks,
+            vestingTimestamp + 108 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             75000000e18,
-            contractDeployedTimestamp + 120 weeks,
+            vestingTimestamp + 120 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             75000000e18,
-            contractDeployedTimestamp + 132 weeks,
+            vestingTimestamp + 132 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             62500000e18,
-            contractDeployedTimestamp + 144 weeks,
+            vestingTimestamp + 144 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             62500000e18,
-            contractDeployedTimestamp + 156 weeks,
+            vestingTimestamp + 156 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             62500000e18,
-            contractDeployedTimestamp + 168 weeks,
+            vestingTimestamp + 168 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             62500000e18,
-            contractDeployedTimestamp + 180 weeks,
+            vestingTimestamp + 180 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             50000000e18,
-            contractDeployedTimestamp + 192 weeks,
+            vestingTimestamp + 192 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             50000000e18,
-            contractDeployedTimestamp + 204 weeks,
+            vestingTimestamp + 204 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             50000000e18,
-            contractDeployedTimestamp + 216 weeks,
+            vestingTimestamp + 216 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             50000000e18,
-            contractDeployedTimestamp + 228 weeks,
+            vestingTimestamp + 228 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             37500000e18,
-            contractDeployedTimestamp + 240 weeks,
+            vestingTimestamp + 240 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             37500000e18,
-            contractDeployedTimestamp + 252 weeks,
+            vestingTimestamp + 252 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             37500000e18,
-            contractDeployedTimestamp + 264 weeks,
+            vestingTimestamp + 264 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             37500000e18,
-            contractDeployedTimestamp + 276 weeks,
+            vestingTimestamp + 276 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 288 weeks,
+            vestingTimestamp + 288 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 300 weeks,
+            vestingTimestamp + 300 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 312 weeks,
+            vestingTimestamp + 312 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 324 weeks,
+            vestingTimestamp + 324 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 336 weeks,
+            vestingTimestamp + 336 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 348 weeks,
+            vestingTimestamp + 348 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 360 weeks,
+            vestingTimestamp + 360 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 372 weeks,
+            vestingTimestamp + 372 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 384 weeks,
+            vestingTimestamp + 384 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 396 weeks,
+            vestingTimestamp + 396 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             25000000e18,
-            contractDeployedTimestamp + 408 weeks,
+            vestingTimestamp + 408 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 420 weeks,
+            vestingTimestamp + 420 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 432 weeks,
+            vestingTimestamp + 432 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 444 weeks,
+            vestingTimestamp + 444 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 456 weeks,
+            vestingTimestamp + 456 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 468 weeks,
+            vestingTimestamp + 468 weeks,
             12 weeks
         );
         addToTokenVesting(
             stakingIncentiveDiscount,
             12500000e18,
-            contractDeployedTimestamp + 480 weeks,
+            vestingTimestamp + 480 weeks,
             12 weeks
         );
     }
@@ -492,97 +538,97 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 72 weeks,
+            vestingTimestamp + 72 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 96 weeks,
+            vestingTimestamp + 96 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 120 weeks,
+            vestingTimestamp + 120 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 144 weeks,
+            vestingTimestamp + 144 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 168 weeks,
+            vestingTimestamp + 168 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 192 weeks,
+            vestingTimestamp + 192 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 216 weeks,
+            vestingTimestamp + 216 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 240 weeks,
+            vestingTimestamp + 240 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 264 weeks,
+            vestingTimestamp + 264 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 288 weeks,
+            vestingTimestamp + 288 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 312 weeks,
+            vestingTimestamp + 312 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 336 weeks,
+            vestingTimestamp + 336 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 360 weeks,
+            vestingTimestamp + 360 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 384 weeks,
+            vestingTimestamp + 384 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 408 weeks,
+            vestingTimestamp + 408 weeks,
             12 weeks
         );
         addToTokenVesting(
             advisor,
             31250000e18,
-            contractDeployedTimestamp + 432 weeks,
+            vestingTimestamp + 432 weeks,
             12 weeks
         );
     }
@@ -592,97 +638,97 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 72 weeks,
+            vestingTimestamp + 72 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 96 weeks,
+            vestingTimestamp + 96 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 120 weeks,
+            vestingTimestamp + 120 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 144 weeks,
+            vestingTimestamp + 144 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 168 weeks,
+            vestingTimestamp + 168 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 192 weeks,
+            vestingTimestamp + 192 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 216 weeks,
+            vestingTimestamp + 216 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 240 weeks,
+            vestingTimestamp + 240 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 264 weeks,
+            vestingTimestamp + 264 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 288 weeks,
+            vestingTimestamp + 288 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 312 weeks,
+            vestingTimestamp + 312 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 336 weeks,
+            vestingTimestamp + 336 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 360 weeks,
+            vestingTimestamp + 360 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 384 weeks,
+            vestingTimestamp + 384 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 408 weeks,
+            vestingTimestamp + 408 weeks,
             12 weeks
         );
         addToTokenVesting(
             team,
             125000000e18,
-            contractDeployedTimestamp + 432 weeks,
+            vestingTimestamp + 432 weeks,
             12 weeks
         );
     }
@@ -692,223 +738,223 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         addToTokenVesting(
             treasury,
             250000000e18,
-            contractDeployedTimestamp,
+            vestingTimestamp,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 12 weeks,
+            vestingTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 24 weeks,
+            vestingTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 36 weeks,
+            vestingTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 48 weeks,
+            vestingTimestamp + 48 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 60 weeks,
+            vestingTimestamp + 60 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 72 weeks,
+            vestingTimestamp + 72 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 84 weeks,
+            vestingTimestamp + 84 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 96 weeks,
+            vestingTimestamp + 96 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 108 weeks,
+            vestingTimestamp + 108 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 120 weeks,
+            vestingTimestamp + 120 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 132 weeks,
+            vestingTimestamp + 132 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 144 weeks,
+            vestingTimestamp + 144 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 156 weeks,
+            vestingTimestamp + 156 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 168 weeks,
+            vestingTimestamp + 168 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 180 weeks,
+            vestingTimestamp + 180 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 192 weeks,
+            vestingTimestamp + 192 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 204 weeks,
+            vestingTimestamp + 204 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 216 weeks,
+            vestingTimestamp + 216 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 228 weeks,
+            vestingTimestamp + 228 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 240 weeks,
+            vestingTimestamp + 240 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 252 weeks,
+            vestingTimestamp + 252 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 264 weeks,
+            vestingTimestamp + 264 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 276 weeks,
+            vestingTimestamp + 276 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 288 weeks,
+            vestingTimestamp + 288 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 300 weeks,
+            vestingTimestamp + 300 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 312 weeks,
+            vestingTimestamp + 312 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 324 weeks,
+            vestingTimestamp + 324 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 336 weeks,
+            vestingTimestamp + 336 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 348 weeks,
+            vestingTimestamp + 348 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 360 weeks,
+            vestingTimestamp + 360 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 372 weeks,
+            vestingTimestamp + 372 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 384 weeks,
+            vestingTimestamp + 384 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 396 weeks,
+            vestingTimestamp + 396 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 408 weeks,
+            vestingTimestamp + 408 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 420 weeks,
+            vestingTimestamp + 420 weeks,
             12 weeks
         );
         addToTokenVesting(
             treasury,
             62500000e18,
-            contractDeployedTimestamp + 432 weeks,
+            vestingTimestamp + 432 weeks,
             12 weeks
         );
     }
