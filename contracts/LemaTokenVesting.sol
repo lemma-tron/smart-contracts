@@ -72,46 +72,62 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     // update initialLiquidity address
     function updateInitialLiquidityAddress(address _initialLiquidity) public onlyOwner {
+        require(grants[initialLiquidity].length <= 0, "Cannot update initial liquidity address !");
         initialLiquidity = _initialLiquidity;
     }
 
     // update privatesale address
     function updatePrivateSaleAddress(address _privateSale) public onlyOwner {
+        require(grants[privateSale].length <= 0, "Cannot update private sale address !");
         privateSale = _privateSale;
     }
 
     // update publicsale address
     function updatePublicSaleAddress(address _publicSale) public onlyOwner {
+        require(grants[publicSale].length <= 0, "Cannot update public sale address !");
         publicSale = _publicSale;
     }
 
     // update marketing address
     function updateMarketingAddress(address _marketing) public onlyOwner {
+        require(grants[marketing].length <= 0, "Cannot update marketing address !");
         marketing = _marketing;
     }
 
     // update stakingIncentiveDiscount address
     function updateStakingIncentiveDiscountAddress(address _stakingIncentiveDiscount) public onlyOwner {
+        require(grants[stakingIncentiveDiscount].length <= 0, "Cannot update stakingIncentiveDiscount address !");
         stakingIncentiveDiscount = _stakingIncentiveDiscount;
     }
 
     // update advisor address
     function updateAdvisorAddress(address _advisor) public onlyOwner {
+        require(grants[advisor].length <= 0, "Cannot update advisor address !");
         advisor = _advisor;
     }
 
     // update team address
     function updateTeamAddress(address _team) public onlyOwner {
+        require(grants[team].length <= 0, "Cannot update team address !");
         team = _team;
     }
 
     // update treasury address
     function updateTreasuryAddress(address _treasury) public onlyOwner {
+        require(grants[treasury].length <= 0, "Cannot update treasury address !");
         treasury = _treasury;
     }
 
     // update vestingTimestamp
     function updateVestingTimestamp(uint256 _vestingTimestamp) public onlyOwner {
+        require(grants[initialLiquidity].length <= 0, "Cannot update vestingTimestamp: initialliquidity !");
+        require(grants[privateSale].length <= 0, "Cannot update vestingTimestamp: privateSale !");
+        require(grants[publicSale].length <= 0, "Cannot update vestingTimestamp: publicSale !");
+        require(grants[marketing].length <= 0, "Cannot update vestingTimestamp: marketing !");
+        require(grants[stakingIncentiveDiscount].length <= 0, "Cannot update vestingTimestamp: stakingIncentiveDiscount !");
+        require(grants[advisor].length <= 0, "Cannot update vestingTimestamp: advisor !");
+        require(grants[team].length <= 0, "Cannot update vestingTimestamp: team !");
+        require(grants[treasury].length <= 0, "Cannot update vestingTimestamp: treasury !");
         vestingTimestamp = _vestingTimestamp;
     }
 
