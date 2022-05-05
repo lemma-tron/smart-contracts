@@ -106,8 +106,8 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         busd = _busd;
         wallet = _wallet;
         vault = _vault;
-        startTime = 1649203200; // Apr 6th 2022, 12 am (UTC)
-        endTime = 1653091200; // May 21st 2022, 12 am (UTC)
+        startTime = 1653004800; // May 20th 2022, 12 am (UTC)
+        endTime = 1654041600; // June 1st 2022, 12 am (UTC)
         startingPrice = 0.00005 ether;
         closingPrice = 0.00010 ether;
         tokenClaimable = false;
