@@ -35,7 +35,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     address public initialLiquidity;
     address public privateSale;
-    address public presale;
+    address public publicSale;
     address public marketing;
     address public stakingIncentiveDiscount;
     address public advisor;
@@ -48,7 +48,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         LemaToken _lemaToken,
         address _initialLiquidity,
         address _privateSale,
-        address _presale,
+        address _publicSale,
         address _marketing,
         address _stakingIncentiveDiscount,
         address _advisor,
@@ -59,7 +59,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         lemaToken = _lemaToken;
         initialLiquidity = _initialLiquidity;
         privateSale = _privateSale;
-        presale = _presale;
+        publicSale = _publicSale;
         marketing = _marketing;
         stakingIncentiveDiscount = _stakingIncentiveDiscount;
         advisor = _advisor;
@@ -94,102 +94,66 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         require(grants[privateSale].length <= 0, "Already Created !");
         addToTokenVesting(
             privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 48 weeks,
+            100000000e18,
+            contractDeployedTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
             privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 60 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 72 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 84 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 96 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 108 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 120 weeks,
-            12 weeks
-        );
-        addToTokenVesting(
-            privateSale,
-            75000000e18,
-            contractDeployedTimestamp + 132 weeks,
-            12 weeks
-        );
-    }
-
-    function createPresaleVesting() public onlyOwner {
-        require(grants[presale].length <= 0, "Already Created !");
-        addToTokenVesting(
-            presale,
-            50000000e18,
+            100000000e18,
             contractDeployedTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
+            privateSale,
+            100000000e18,
             contractDeployedTimestamp + 36 weeks,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
+            privateSale,
+            100000000e18,
             contractDeployedTimestamp + 48 weeks,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
+            privateSale,
+            100000000e18,
             contractDeployedTimestamp + 60 weeks,
             12 weeks
         );
+    }
+
+    function createPublicVesting() public onlyOwner {
+        require(grants[publicSale].length <= 0, "Already Created !");
         addToTokenVesting(
-            presale,
-            50000000e18,
-            contractDeployedTimestamp + 72 weeks,
+            publicSale,
+            100000000e18,
+            contractDeployedTimestamp,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
-            contractDeployedTimestamp + 84 weeks,
+            publicSale,
+            100000000e18,
+            contractDeployedTimestamp + 12 weeks,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
-            contractDeployedTimestamp + 96 weeks,
+            publicSale,
+            100000000e18,
+            contractDeployedTimestamp + 24 weeks,
             12 weeks
         );
         addToTokenVesting(
-            presale,
-            50000000e18,
-            contractDeployedTimestamp + 108 weeks,
+            publicSale,
+            100000000e18,
+            contractDeployedTimestamp + 36 weeks,
+            12 weeks
+        );
+        addToTokenVesting(
+            publicSale,
+            100000000e18,
+            contractDeployedTimestamp + 48 weeks,
             12 weeks
         );
     }
@@ -198,7 +162,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         require(grants[marketing].length <= 0, "Already Created !");
         addToTokenVesting(
             marketing,
-            250000000e18,
+            125000000e18,
             contractDeployedTimestamp,
             12 weeks
         );
@@ -260,6 +224,12 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
             marketing,
             125000000e18,
             contractDeployedTimestamp + 252 weeks,
+            12 weeks
+        );
+        addToTokenVesting(
+            marketing,
+            125000000e18,
+            contractDeployedTimestamp + 276 weeks,
             12 weeks
         );
     }
@@ -975,7 +945,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     function vestInitialTokens() public onlyOwner {
         release(initialLiquidity);
         release(privateSale);
-        release(presale);
+        release(publicSale);
         release(marketing);
         release(stakingIncentiveDiscount);
         release(advisor);

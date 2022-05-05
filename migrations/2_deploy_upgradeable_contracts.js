@@ -121,7 +121,7 @@ module.exports = async function (deployer, network, accounts) {
       lemaTokenInstance.address, // _lemaToken
       accounts[0], // _initialLiquidity
       accounts[1], // _privateSale
-      accounts[2], // _presale
+      accounts[2], // _publicSale
       accounts[3], // _marketing
       lemaChefInstance.address, // _stakingIncentiveDiscount
       accounts[5], // _advisor
