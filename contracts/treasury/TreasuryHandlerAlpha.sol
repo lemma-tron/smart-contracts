@@ -236,11 +236,11 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
         // The BUSD/token pool is the primary pool. It always exists.
         address[] memory path = new address[](2);
         path[0] = address(token);
-        path[1] = router.WETH();
+        path[1] = address(busdToken);
 
         // Ensure the router can perform the swap for the designated number of tokens.
         token.approve(address(router), tokenAmount);
-        router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount, 0, path, address(this), block.timestamp);
+        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount, 0, path, address(this), block.timestamp);
     }
 
     /**
@@ -253,9 +253,11 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
         token.approve(address(router), tokenAmount);
 
         // Both minimum values are set to zero to allow for any form of slippage.
-        router.addLiquidityETH{ value: weiAmount }(
+        router.addLiquidity(
             address(token),
+            address(busdToken),
             tokenAmount,
+            weiAmount,
             0,
             0,
             address(treasury),
