@@ -3,12 +3,10 @@ const timeMachine = require("ganache-time-traveler");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const LemaToken = artifacts.require("LemaToken");
-const LemaGovernance = artifacts.require("LemaGovernance");
 
 let lemaStakingInstance;
 let lemaTokenVesting;
 let lemaToken;
-let lemaGovernanceInstance;
 
 contract("LemaStaking", function (accounts) {
   let snapshotId;
@@ -29,6 +27,10 @@ contract("LemaStaking", function (accounts) {
 
     const totalSupply = await lemaToken.cap();
     await lemaToken.mint(lemaTokenVesting.address, totalSupply.toString());
+
+    // Sets timestamp as hardcoded inside contract
+    // Thursday, June 16, 2022 12:00:00 AM (GMT)
+    await timeMachine.advanceBlockAndSetTime(1655337600);
 
     return assert(
       lemaStakingInstance !== undefined,
@@ -64,12 +66,4 @@ contract("LemaStaking", function (accounts) {
 
     assert.equal(balance.toString(), "487500000000000000000000000"); // 4.875e26, Fifth quarter
   });
-
-  // it("should have totalAllocPoint", async () => {
-  //   await lemaStakingInstance.reallocPoint();
-
-  //   const totalAllocPoint = await lemaStakingInstance.totalAllocPoint();
-
-  //   assert.equal(totalAllocPoint.toString(), "100000000000000000000000000");
-  // });
 });

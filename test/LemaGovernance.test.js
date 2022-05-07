@@ -314,56 +314,7 @@ contract("LemaGovernance: Time-Based test cases", function (accounts) {
     );
   });
 
-  // it("should throw error before the start of governance period", async () => {
-  //   // await lemaGovernanceInstance.startNewGovernance();
-  //   // const { governanceVotingStart, governanceVotingEnd } =
-  //   //   await lemaGovernanceInstance.currentGovernance();
-  //   // console.log("governanceVotingStart", governanceVotingStart.toString());
-  //   // console.log("governanceVotingEnd", governanceVotingEnd.toString());
-  //   // console.log(
-  //   //   "Governance start timestamp:",
-  //   //   new Date(governanceVotingStart.toNumber() * 1000)
-  //   // );
-  //   // console.log(
-  //   //   "Governance end timestamp:",
-  //   //   new Date(governanceVotingEnd.toNumber() * 1000)
-  //   // );
-  //   // console.log(
-  //   //   "Trial start timestamp:",
-  //   //   new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30)
-  //   // );
-  //   // console.log(
-  //   //   "Trial end timestamp:",
-  //   //   new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 120)
-  //   // );
-  //   // // governanceVotingStart 1651536000
-  //   // // governanceVotingEnd 1659312000
-  //   // // Governance start timestamp: 2022-05-03T00:00:00.000Z
-  //   // // Governance end timestamp: 2022-08-01T00:00:00.000Z
-  //   // // Trial start timestamp: 2022-04-03T10:29:26.124Z
-  //   // // Trial end timestamp: 2022-08-31T10:29:26.124Z
-  //   // assert.equal(governanceVotingStart.toString(), "0");
-
-  //   // await timeMachine.advanceBlockAndSetTime(
-  //   //   new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 30).getTime() / 1000
-  //   // );
-
-  //   try {
-  //     await lemaGovernanceInstance.rewardMostVotedProject();
-  //     assert(false, "should have thrown");
-  //   } catch (error) {
-  //     console.log("Error:", Object.keys(error));
-  //     console.log("Message:", error.message);
-  //     console.log("Data:", error.data);
-  //     console.log("Name:", error.name);
-  //     console.log("Reason:", error.reason);
-  //     // console.log(Object.values(error.data));
-  //     // console.log("hijackedStack:", error.hijackedStack);
-  //     // const reason = Object.values(error.data)[0].reason;
-  //     // assert.equal(reason, "LemaGovernance: Voitng hasn't started yet");
-  //   }
-  // });
-
+  // This test may be failing in truffle develop network
   it("should throw error after the end of governance period", async () => {
     await timeMachine.advanceTimeAndBlock(60 * 60 * 24 * 120);
 
