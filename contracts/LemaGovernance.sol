@@ -30,6 +30,7 @@ contract LemaGovernance is
         string twitterLink;
         string telegramLink;
         string discordLink;
+        string mediumLink;
         bool approved;
         address[] validatorVoters;
     }
@@ -78,7 +79,6 @@ contract LemaGovernance is
     ) public initializer {
         __Ownable_init();
         __LemaValidators_init();
-        // __LemaChef_init(_lemaToken, _treasury, _startBlock);
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
         lemaChef = _lemaChef;
@@ -171,7 +171,8 @@ contract LemaGovernance is
         string memory _projectWebsite,
         string memory _twitterLink,
         string memory _telegramLink,
-        string memory _discordLink
+        string memory _discordLink,
+        string memory _mediumLink
     ) external runningGovernanceOnly {
         uint256 index = currentGovernance.projects.length;
         currentGovernance.projects.push();
@@ -186,6 +187,7 @@ contract LemaGovernance is
         project.twitterLink = _twitterLink;
         project.telegramLink = _telegramLink;
         project.discordLink = _discordLink;
+        project.mediumLink = _mediumLink;
     }
 
     function approveProject(uint256 index)

@@ -51,6 +51,7 @@ contract("LemaGovernance", function (accounts) {
     const twitterLink = "https://twitter.com/bitcoin";
     const telegramLink = "https://t.me/bitcoin";
     const discordLink = "https://discord.gg/bitcoin";
+    const mediumLink = "https://medium.com/@bitcoin";
 
     await lemaGovernanceInstance.addProject(
       projectName,
@@ -63,6 +64,7 @@ contract("LemaGovernance", function (accounts) {
       twitterLink,
       telegramLink,
       discordLink,
+      mediumLink,
       { from: accounts[1] }
     );
 
