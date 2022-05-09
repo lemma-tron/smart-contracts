@@ -1,13 +1,16 @@
 const LemaToken = artifacts.require("LemaToken");
 const LemaTaxHandler = artifacts.require("LemaTaxHandler");
+const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
 
 let lemaTokenInstance;
 let lemaTaxHandlerInstance;
+let treasuryHandlerInstance;
 
 contract("LemaToken", function (accounts) {
   it("should assert true", async () => {
     lemaTokenInstance = await LemaToken.deployed();
     lemaTaxHandlerInstance = await LemaTaxHandler.deployed();
+    treasuryHandlerInstance = await TreasuryHandlerAlpha.deployed();
     assert(
       lemaTaxHandlerInstance !== undefined,
       "LemaTaxHandler contract should be defined"
@@ -70,31 +73,28 @@ contract("LemaToken", function (accounts) {
 
     await lemaTokenInstance.mint(accounts[0], 10000);
 
+    const treasuryAddress = treasuryHandlerInstance.address;
+    const receiverAddress = accounts[5];
+
     const initialTreasuryBalance = (
-      await lemaTokenInstance.balanceOf(accounts[7])
+      await lemaTokenInstance.balanceOf(treasuryAddress)
     ).toNumber();
     const initialReceiverBalance = (
-      await lemaTokenInstance.balanceOf(accounts[5])
+      await lemaTokenInstance.balanceOf(receiverAddress)
     ).toNumber();
 
-    // console.log(
-    //   "Initial Balances:",
-    //   initialTreasuryBalance,
-    //   initialReceiverBalance
-    // );
     assert.equal(initialTreasuryBalance, 0);
     assert.equal(initialReceiverBalance, 0);
 
-    await lemaTokenInstance.transfer(accounts[5], 10000);
+    await lemaTokenInstance.transfer(receiverAddress, 10000);
 
     const finalTreasuryBalance = (
-      await lemaTokenInstance.balanceOf(accounts[7])
+      await lemaTokenInstance.balanceOf(treasuryAddress)
     ).toNumber();
     const finalReceiverBalance = (
-      await lemaTokenInstance.balanceOf(accounts[5])
+      await lemaTokenInstance.balanceOf(receiverAddress)
     ).toNumber();
 
-    // console.log("Final Balances:", finalTreasuryBalance, finalReceiverBalance);
     assert.equal(finalTreasuryBalance, 500);
     assert.equal(finalReceiverBalance, 9500);
   });
@@ -104,26 +104,62 @@ contract("LemaToken", function (accounts) {
 
     await lemaTokenInstance.mint(accounts[0], 10000);
 
+    const treasuryAddress = treasuryHandlerInstance.address;
+    const receiverAddress = uniswapV2Router;
+
     const initialTreasuryBalance = (
-      await lemaTokenInstance.balanceOf(accounts[7])
+      await lemaTokenInstance.balanceOf(treasuryAddress)
     ).toNumber();
     const initialReceiverBalance = (
-      await lemaTokenInstance.balanceOf(uniswapV2Router)
+      await lemaTokenInstance.balanceOf(receiverAddress)
     ).toNumber();
 
     assert.equal(initialTreasuryBalance, 500);
     assert.equal(initialReceiverBalance, 0);
 
-    await lemaTokenInstance.transfer(uniswapV2Router, 10000);
+    await lemaTokenInstance.transfer(receiverAddress, 10000);
 
     const finalTreasuryBalance = (
-      await lemaTokenInstance.balanceOf(accounts[7])
+      await lemaTokenInstance.balanceOf(treasuryAddress)
     ).toNumber();
     const finalReceiverBalance = (
-      await lemaTokenInstance.balanceOf(uniswapV2Router)
+      await lemaTokenInstance.balanceOf(receiverAddress)
     ).toNumber();
 
     assert.equal(finalTreasuryBalance, 800);
     assert.equal(finalReceiverBalance, 9700);
+  });
+
+  it("should not deduct tax on trade transfers with wallets added as _exempted", async () => {
+    const uniswapV2Router = await lemaTaxHandlerInstance.uniswapV2Router();
+
+    await lemaTaxHandlerInstance.addExemption(accounts[0]);
+
+    await lemaTokenInstance.mint(accounts[0], 10000);
+
+    const treasuryAddress = treasuryHandlerInstance.address;
+    const receiverAddress = uniswapV2Router;
+
+    const initialTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(treasuryAddress)
+    ).toNumber();
+    const initialReceiverBalance = (
+      await lemaTokenInstance.balanceOf(receiverAddress)
+    ).toNumber();
+
+    assert.equal(initialTreasuryBalance, 800);
+    assert.equal(initialReceiverBalance, 9700);
+
+    await lemaTokenInstance.transfer(receiverAddress, 10000);
+
+    const finalTreasuryBalance = (
+      await lemaTokenInstance.balanceOf(treasuryAddress)
+    ).toNumber();
+    const finalReceiverBalance = (
+      await lemaTokenInstance.balanceOf(receiverAddress)
+    ).toNumber();
+
+    assert.equal(finalTreasuryBalance, 800);
+    assert.equal(finalReceiverBalance, 19700);
   });
 });

@@ -112,6 +112,21 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         treasuryAddress = _newTreasuryAddress;
     }
 
+    /// @notice Updates tax handler address. Must only be called by the owner.
+    function updateTaxHandlerAddress(LemaTaxHandler _newTaxHandlerAddress)
+        public
+        onlyOwner
+    {
+        taxHandler = _newTaxHandlerAddress;
+    }
+
+    /// @notice Updates treasury handler address. Must only be called by the owner.
+    function updateTreasuryHandlerAddress(
+        address _newTreasuryHandlerAddress
+    ) public onlyOwner {
+        treasuryHandler = ITreasuryHandler(_newTreasuryHandlerAddress);
+    }
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner.
     function mint(address _to, uint256 _amount) public onlyOwner {
         require(totalSupply().add(_amount) <= cap(), "LemaToken: Cap exceeded");
@@ -133,7 +148,7 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         super._transfer(from, to, amount.sub(taxAmount));
 
         if (taxAmount > 0) {
-            super._transfer(from, address(taxHandler), taxAmount);
+            super._transfer(from, address(treasuryHandler), taxAmount);
         }
 
         treasuryHandler.afterTransferHandler(from, to, amount);

@@ -40,6 +40,7 @@ module.exports = async function (deployer, network, accounts) {
       accounts[0], // burner address
       treasuryAddress, // treasury address
       lemaTaxHandlerInstance.address, // taxHandler address
+      "0x0000000000000000000000000000000000000000", // temp treasuryHandler address
     ],
     {
       deployer,
@@ -47,24 +48,25 @@ module.exports = async function (deployer, network, accounts) {
     }
   );
 
-  if (isDev) {
-    // const treasuryHandlerAlphaInstance =
-    await deployProxy(
-      TreasuryHandlerAlpha,
-      [
-        treasuryAddress, // treasury address
-        busdAddress, // busd address
-        lemaTokenInstance.address, // lema token address
-        "0x10ED43C718714eb63d5aA57B78B54704E256024E", // router address
-        0, // initial liquidity basis points
-        0, // initial price impact basis points
-      ],
-      {
-        deployer,
-        initializer: "initialize",
-      }
-    );
-  }
+  const treasuryHandlerAlphaInstance = await deployProxy(
+    TreasuryHandlerAlpha,
+    [
+      treasuryAddress, // treasury address
+      busdAddress, // busd address
+      lemaTokenInstance.address, // lema token address
+      "0x10ED43C718714eb63d5aA57B78B54704E256024E", // router address
+      0, // initial liquidity basis points
+      0, // initial price impact basis points
+    ],
+    {
+      deployer,
+      initializer: "initialize",
+    }
+  );
+
+  await lemaTokenInstance.updateTreasuryHandlerAddress(
+    treasuryHandlerAlphaInstance.address
+  );
 
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
