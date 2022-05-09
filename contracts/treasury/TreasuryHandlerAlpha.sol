@@ -14,8 +14,8 @@ import "./ITreasuryHandler.sol";
 /**
  * @title Treasury handler alpha contract
  * @dev Sells tokens that have accumulated through taxes and sends the resulting BUSD to the treasury. If
- * `liquidityBasisPoints` has been set to a non-zero value, then that percentage will instead be added to the designated
- * liquidity pool.
+ * `taxBasisPoints` has been set to a non-zero value, then that percentage will instead be collected at the designated
+ * treasury address.
  */
 contract TreasuryHandlerAlpha is
     Initializable,
@@ -27,6 +27,9 @@ contract TreasuryHandlerAlpha is
     using AddressUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
+    /// @dev The set of addresses exempt from tax.
+    EnumerableSetUpgradeable.AddressSet private _exempted;
+
     /// @notice The treasury address.
     address public treasury;
 
@@ -35,23 +38,14 @@ contract TreasuryHandlerAlpha is
     /// @notice The token that accumulates through taxes. This will be sold for BUSD.
     IERC20Upgradeable public token;
 
-    /// @notice The basis points of tokens to sell and add as liquidity to the pool.
-    uint256 public liquidityBasisPoints;
-
-    /// @notice The maximum price impact the sell (initiated from this contract) may have.
-    uint256 public priceImpactBasisPoints;
+    /// @notice How much tax to collect in basis points. 10,000 basis points is 100%.
+    uint256 public taxBasisPoints;
 
     /// @notice The Uniswap router that handles the sell and liquidity operations.
     IUniswapV2Router02 public router;
 
-    /// @notice Emitted when the basis points value of tokens to add as liquidity is updated.
-    event LiquidityBasisPointsUpdated(
-        uint256 oldBasisPoints,
-        uint256 newBasisPoints
-    );
-
-    /// @notice Emitted when the maximum price impact basis points value is updated.
-    event PriceImpactBasisPointsUpdated(
+    /// @notice Emitted when the basis points value of tokens to collect as tax is updated.
+    event TaxBasisPointsUpdated(
         uint256 oldBasisPoints,
         uint256 newBasisPoints
     );
@@ -61,22 +55,23 @@ contract TreasuryHandlerAlpha is
         address oldTreasuryAddress,
         address newTreasuryAddress
     );
+    
+    /// @notice Emitted when an address is added to or removed from the exempted addresses set.
+    event TaxExemptionUpdated(address indexed wallet, bool exempted);
 
     /**
      * @param treasuryAddress Address of treasury to use.
      * @param busdTokenAddress Address of busd token.
      * @param tokenAddress Address of token to accumulate and sell.
      * @param routerAddress Address of Uniswap router for sell and liquidity operations.
-     * @param initialLiquidityBasisPoints Initial basis points value of swap to add to liquidity.
-     * @param initialPriceImpactBasisPoints Initial basis points value of price impact to account for during swaps.
+     * @param initialTaxBasisPoints Initial basis points value of tax to collect in the treasury.
      */
     function initialize(
         address treasuryAddress,
         address busdTokenAddress,
         address tokenAddress,
         address routerAddress,
-        uint256 initialLiquidityBasisPoints,
-        uint256 initialPriceImpactBasisPoints
+        uint256 initialTaxBasisPoints
     ) public initializer {
         __Ownable_init();
         __LenientReentrancyGuard_init();
@@ -84,8 +79,7 @@ contract TreasuryHandlerAlpha is
         busdToken = IERC20Upgradeable(busdTokenAddress);
         token = IERC20Upgradeable(tokenAddress);
         router = IUniswapV2Router02(routerAddress);
-        liquidityBasisPoints = initialLiquidityBasisPoints;
-        priceImpactBasisPoints = initialPriceImpactBasisPoints;
+        taxBasisPoints = initialTaxBasisPoints;
     }
 
     /**
@@ -112,53 +106,26 @@ contract TreasuryHandlerAlpha is
             return;
         }
 
-        uint256 contractTokenBalance = token.balanceOf(address(this));
-        if (contractTokenBalance > 0) {
-            uint256 primaryPoolBalance = token.balanceOf(primaryPool);
-            uint256 maxPriceImpactSale = (primaryPoolBalance *
-                priceImpactBasisPoints) / 10000;
+        uint256 currentWeiBalance = busdToken.balanceOf(address(this));
+        _swapTokensForBUSD(amount);
 
-            // Ensure the price impact is within reasonable bounds.
-            if (contractTokenBalance > maxPriceImpactSale) {
-                contractTokenBalance = maxPriceImpactSale;
-            }
-
-            // The number of tokens to sell for liquidity purposes. This is calculated as follows:
-            //
-            //      B     P
-            //  L = - * -----
-            //      2   10000
-            //
-            // Where:
-            //  L = tokens to sell for liquidity
-            //  B = available token balance
-            //  P = basis points of tokens to use for liquidity
-            //
-            // The number is divided by two to preserve the token side of the token/BUSD pool.
-            uint256 tokensForLiquidity = (contractTokenBalance *
-                liquidityBasisPoints) / 20000;
-            uint256 tokensForSwap = contractTokenBalance - tokensForLiquidity;
-
-            uint256 currentWeiBalance = busdToken.balanceOf(address(this));
-            _swapTokensForBUSD(tokensForSwap);
+        if (!_exempted.contains(benefactor)) {
             uint256 weiEarned = busdToken.balanceOf(address(this)) -
                 currentWeiBalance;
 
             // No need to divide this number, because that was only to have enough tokens remaining to pair with this
             // BUSD value.
-            uint256 weiForLiquidity = (weiEarned * liquidityBasisPoints) /
+            uint256 weiForTax = (weiEarned * taxBasisPoints) /
                 10000;
 
-            if (tokensForLiquidity > 0) {
-                _addLiquidity(tokensForLiquidity, weiForLiquidity);
-            }
+            busdToken.transfer(address(treasury), weiForTax);
+        }
 
-            // It's cheaper to get the active balance rather than calculating based off of the `currentWeiBalance` and
-            // `weiForLiquidity` numbers.
-            uint256 remainingWeiBalance = busdToken.balanceOf(address(this));
-            if (remainingWeiBalance > 0) {
-                busdToken.transfer(msg.sender, remainingWeiBalance);
-            }
+        // It's cheaper to get the active balance rather than calculating based off of the `currentWeiBalance` and
+        // `weiForLiquidity` numbers.
+        uint256 remainingWeiBalance = busdToken.balanceOf(address(this));
+        if (remainingWeiBalance > 0) {
+            busdToken.transfer(msg.sender, remainingWeiBalance);
         }
     }
 
@@ -182,41 +149,22 @@ contract TreasuryHandlerAlpha is
     }
 
     /**
-     * @notice Set new liquidity basis points value.
-     * @param newBasisPoints New liquidity basis points value. Cannot exceed 10,000 (i.e., 100%) as that would break the
+     * @notice Set new tax basis points value.
+     * @param newBasisPoints New tax basis points value. Cannot exceed 10,000 (i.e., 100%) as that would break the
      * calculation.
      */
-    function setLiquidityBasisPoints(uint256 newBasisPoints)
+    function setTaxBasisPoints(uint256 newBasisPoints)
         external
         onlyOwner
     {
         require(
             newBasisPoints <= 10000,
-            "TreasuryHandlerAlpha:setLiquidityPercentage:INVALID_PERCENTAGE: Cannot set more than 10,000 basis points."
+            "TreasuryHandlerAlpha:setTaxPercentage:INVALID_PERCENTAGE: Cannot set more than 10,000 basis points."
         );
-        uint256 oldBasisPoints = liquidityBasisPoints;
-        liquidityBasisPoints = newBasisPoints;
+        uint256 oldBasisPoints = taxBasisPoints;
+        taxBasisPoints = newBasisPoints;
 
-        emit LiquidityBasisPointsUpdated(oldBasisPoints, newBasisPoints);
-    }
-
-    /**
-     * @notice Set new price impact basis points value.
-     * @param newBasisPoints New price impact basis points value.
-     */
-    function setPriceImpactBasisPoints(uint256 newBasisPoints)
-        external
-        onlyOwner
-    {
-        require(
-            newBasisPoints < 1500,
-            "TreasuryHandlerAlpha:setPriceImpactBasisPoints:OUT_OF_BOUNDS: Cannot set price impact too high."
-        );
-
-        uint256 oldBasisPoints = priceImpactBasisPoints;
-        priceImpactBasisPoints = newBasisPoints;
-
-        emit PriceImpactBasisPointsUpdated(oldBasisPoints, newBasisPoints);
+        emit TaxBasisPointsUpdated(oldBasisPoints, newBasisPoints);
     }
 
     /**
@@ -276,28 +224,26 @@ contract TreasuryHandlerAlpha is
             address(this),
             block.timestamp
         );
+    } 
+
+    /**
+     * @notice Add address to set of tax-exempted addresses.
+     * @param exemption Address to add to set of tax-exempted addresses.
+     */
+    function addExemption(address exemption) external onlyOwner {
+        if (_exempted.add(exemption)) {
+            emit TaxExemptionUpdated(exemption, true);
+        }
     }
 
     /**
-     * @dev Add liquidity to primary pool.
-     * @param tokenAmount Number of tokens to add as liquidity.
-     * @param weiAmount BUSD value to pair with the tokens.
+     * @notice Remove address from set of tax-exempted addresses.
+     * @param exemption Address to remove from set of tax-exempted addresses.
      */
-    function _addLiquidity(uint256 tokenAmount, uint256 weiAmount) private {
-        // Ensure the router can perform the transfer for the designated number of tokens.
-        token.approve(address(router), tokenAmount);
-
-        // Both minimum values are set to zero to allow for any form of slippage.
-        router.addLiquidity(
-            address(token),
-            address(busdToken),
-            tokenAmount,
-            weiAmount,
-            0,
-            0,
-            address(treasury),
-            block.timestamp
-        );
+    function removeExemption(address exemption) external onlyOwner {
+        if (_exempted.remove(exemption)) {
+            emit TaxExemptionUpdated(exemption, false);
+        }
     }
 
     /**
