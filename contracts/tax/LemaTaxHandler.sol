@@ -6,7 +6,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
-import "./utils/ExchangePoolProcessor.sol";
+import "./ITaxHandler.sol";
+import "../utils/ExchangePoolProcessor.sol";
 
 /**
  * @title LemaTaxHandler
@@ -14,6 +15,7 @@ import "./utils/ExchangePoolProcessor.sol";
  */
 contract LemaTaxHandler is
     Initializable,
+    ITaxHandler,
     OwnableUpgradeable,
     ExchangePoolProcessor
 {
@@ -60,7 +62,7 @@ contract LemaTaxHandler is
         address benefactor,
         address beneficiary,
         uint256 amount
-    ) external view returns (uint256) {
+    ) external view override returns (uint256) {
         if (_exempted.contains(benefactor) || _exempted.contains(beneficiary)) {
             return 0;
         }
