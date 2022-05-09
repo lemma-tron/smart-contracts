@@ -107,7 +107,7 @@ contract("PresaleLemaV2", function (accounts) {
     });
   });
 
-  describe("[Test Presale Buy functionalities]", () => {
+  xdescribe("[Test Presale Buy functionalities]", () => {
     it("should allow buying LEMA token", async function () {
       var currentTimestamp = Number(await time.latest());
       var updateStartTimestamp = currentTimestamp + 1800;
