@@ -43,9 +43,6 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     // The amount of tokens raised
     uint256 public tokensRaised;
 
-    // The max amount of BUSD that you can pay to participate in the presale
-    uint256 public constant MAX_PURCHASE = 10000 * 1e18;
-
     // Minimum amount of BUSD to be raised. 20k BUSD
     uint256 public constant MIN_GOAL = 20000 * 1e18;
 
@@ -106,10 +103,10 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         busd = _busd;
         wallet = _wallet;
         vault = _vault;
-        startTime = 1653004800; // May 20th 2022, 12 am (UTC)
-        endTime = 1654041600; // June 1st 2022, 12 am (UTC)
+        startTime = 1652572800; // May 15th 2022, 12 am (UTC)
+        endTime = 1653523200; // May 26th 2022, 12 am (UTC)
         startingPrice = 0.00005 ether;
-        closingPrice = 0.00010 ether;
+        closingPrice = 0.0010 ether;
         tokenClaimable = false;
         busdRaised = 0;
         tokensRaised = 0;
@@ -119,24 +116,26 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     }
 
     function getPrice() public view returns (uint256) {
-        uint256 daysPassed = (block.timestamp.sub(startTime)).div(1 days);
-        uint256 duration = (endTime.sub(startTime)).div(1 days);
-        uint256 price = startingPrice.add(
-            ((closingPrice.sub(startingPrice)).mul(daysPassed)).div(duration)
+        uint256 daysPassed = ((block.timestamp.sub(startTime)).mul(1e18)).div(
+            1 days
+        );
+        uint256 duration = ((endTime.sub(startTime)).mul(1e18)).div(1 days);
+        uint256 price = (
+            startingPrice.add(
+                (((closingPrice.sub(startingPrice)).mul(daysPassed))).div(
+                    duration
+                )
+            )
         );
         return price;
     }
 
     function buyTokensWithBUSD(uint256 _amount) public runningPreSaleOnly {
         require(_amount > 0, "Amount should be greater than 0");
-        require(
-            presaleBalances[msg.sender].add(_amount) <= MAX_PURCHASE,
-            "Max purchase limit reached"
-        );
         require(_amount <= busd.balanceOf(msg.sender), "BUSD is not enough");
 
         uint256 price = getPrice();
-        uint256 tokens = _amount.div(price);
+        uint256 tokens = (_amount.mul(1e18)).div(price);
 
         busdRaised = busdRaised.add(_amount);
         tokensRaised = tokensRaised.add(tokens);

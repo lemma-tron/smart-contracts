@@ -30,7 +30,11 @@ abstract contract ExchangePoolProcessor is OwnableUpgradeable {
      * @notice Get list of addresses designated as exchange pools.
      * @return An array of exchange pool addresses.
      */
-    function getExchangePoolAddresses() external view returns (address[] memory) {
+    function getExchangePoolAddresses()
+        external
+        view
+        returns (address[] memory)
+    {
         return _exchangePools.values();
     }
 

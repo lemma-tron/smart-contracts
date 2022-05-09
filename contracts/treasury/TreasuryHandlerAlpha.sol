@@ -17,7 +17,13 @@ import "./ITreasuryHandler.sol";
  * `liquidityBasisPoints` has been set to a non-zero value, then that percentage will instead be added to the designated
  * liquidity pool.
  */
-contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHandler, LenientReentrancyGuard, ExchangePoolProcessor {
+contract TreasuryHandlerAlpha is
+    Initializable,
+    OwnableUpgradeable,
+    ITreasuryHandler,
+    LenientReentrancyGuard,
+    ExchangePoolProcessor
+{
     using AddressUpgradeable for address;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
@@ -39,13 +45,22 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
     IUniswapV2Router02 public router;
 
     /// @notice Emitted when the basis points value of tokens to add as liquidity is updated.
-    event LiquidityBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
+    event LiquidityBasisPointsUpdated(
+        uint256 oldBasisPoints,
+        uint256 newBasisPoints
+    );
 
     /// @notice Emitted when the maximum price impact basis points value is updated.
-    event PriceImpactBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
+    event PriceImpactBasisPointsUpdated(
+        uint256 oldBasisPoints,
+        uint256 newBasisPoints
+    );
 
     /// @notice Emitted when the treasury address is updated.
-    event TreasuryAddressUpdated(address oldTreasuryAddress, address newTreasuryAddress);
+    event TreasuryAddressUpdated(
+        address oldTreasuryAddress,
+        address newTreasuryAddress
+    );
 
     /**
      * @param treasuryAddress Address of treasury to use.
@@ -63,7 +78,7 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
         uint256 initialLiquidityBasisPoints,
         uint256 initialPriceImpactBasisPoints
     ) public initializer {
-        __Ownable_init();        
+        __Ownable_init();
         __LenientReentrancyGuard_init();
         treasury = treasuryAddress;
         busdToken = IERC20Upgradeable(busdTokenAddress);
@@ -100,7 +115,8 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
         uint256 contractTokenBalance = token.balanceOf(address(this));
         if (contractTokenBalance > 0) {
             uint256 primaryPoolBalance = token.balanceOf(primaryPool);
-            uint256 maxPriceImpactSale = (primaryPoolBalance * priceImpactBasisPoints) / 10000;
+            uint256 maxPriceImpactSale = (primaryPoolBalance *
+                priceImpactBasisPoints) / 10000;
 
             // Ensure the price impact is within reasonable bounds.
             if (contractTokenBalance > maxPriceImpactSale) {
@@ -119,16 +135,19 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
             //  P = basis points of tokens to use for liquidity
             //
             // The number is divided by two to preserve the token side of the token/BUSD pool.
-            uint256 tokensForLiquidity = (contractTokenBalance * liquidityBasisPoints) / 20000;
+            uint256 tokensForLiquidity = (contractTokenBalance *
+                liquidityBasisPoints) / 20000;
             uint256 tokensForSwap = contractTokenBalance - tokensForLiquidity;
 
             uint256 currentWeiBalance = busdToken.balanceOf(address(this));
             _swapTokensForBUSD(tokensForSwap);
-            uint256 weiEarned = busdToken.balanceOf(address(this)) - currentWeiBalance;
+            uint256 weiEarned = busdToken.balanceOf(address(this)) -
+                currentWeiBalance;
 
             // No need to divide this number, because that was only to have enough tokens remaining to pair with this
             // BUSD value.
-            uint256 weiForLiquidity = (weiEarned * liquidityBasisPoints) / 10000;
+            uint256 weiForLiquidity = (weiEarned * liquidityBasisPoints) /
+                10000;
 
             if (tokensForLiquidity > 0) {
                 _addLiquidity(tokensForLiquidity, weiForLiquidity);
@@ -167,7 +186,10 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
      * @param newBasisPoints New liquidity basis points value. Cannot exceed 10,000 (i.e., 100%) as that would break the
      * calculation.
      */
-    function setLiquidityBasisPoints(uint256 newBasisPoints) external onlyOwner {
+    function setLiquidityBasisPoints(uint256 newBasisPoints)
+        external
+        onlyOwner
+    {
         require(
             newBasisPoints <= 10000,
             "TreasuryHandlerAlpha:setLiquidityPercentage:INVALID_PERCENTAGE: Cannot set more than 10,000 basis points."
@@ -182,7 +204,10 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
      * @notice Set new price impact basis points value.
      * @param newBasisPoints New price impact basis points value.
      */
-    function setPriceImpactBasisPoints(uint256 newBasisPoints) external onlyOwner {
+    function setPriceImpactBasisPoints(uint256 newBasisPoints)
+        external
+        onlyOwner
+    {
         require(
             newBasisPoints < 1500,
             "TreasuryHandlerAlpha:setPriceImpactBasisPoints:OUT_OF_BOUNDS: Cannot set price impact too high."
@@ -224,7 +249,11 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
         if (tokenAddress == address(0)) {
             busdToken.transfer(msg.sender, amount);
         } else {
-            IERC20Upgradeable(tokenAddress).transferFrom(address(this), address(treasury), amount);
+            IERC20Upgradeable(tokenAddress).transferFrom(
+                address(this),
+                address(treasury),
+                amount
+            );
         }
     }
 
@@ -240,7 +269,13 @@ contract TreasuryHandlerAlpha is Initializable, OwnableUpgradeable, ITreasuryHan
 
         // Ensure the router can perform the swap for the designated number of tokens.
         token.approve(address(router), tokenAmount);
-        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount, 0, path, address(this), block.timestamp);
+        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            tokenAmount,
+            0,
+            path,
+            address(this),
+            block.timestamp
+        );
     }
 
     /**

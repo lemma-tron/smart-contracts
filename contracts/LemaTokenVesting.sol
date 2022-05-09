@@ -71,32 +71,52 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     }
 
     // update initialLiquidity address
-    function updateInitialLiquidityAddress(address _initialLiquidity) public onlyOwner {
-        require(grants[initialLiquidity].length <= 0, "Cannot update initial liquidity address !");
+    function updateInitialLiquidityAddress(address _initialLiquidity)
+        public
+        onlyOwner
+    {
+        require(
+            grants[initialLiquidity].length <= 0,
+            "Cannot update initial liquidity address !"
+        );
         initialLiquidity = _initialLiquidity;
     }
 
     // update privatesale address
     function updatePrivateSaleAddress(address _privateSale) public onlyOwner {
-        require(grants[privateSale].length <= 0, "Cannot update private sale address !");
+        require(
+            grants[privateSale].length <= 0,
+            "Cannot update private sale address !"
+        );
         privateSale = _privateSale;
     }
 
     // update publicsale address
     function updatePublicSaleAddress(address _publicSale) public onlyOwner {
-        require(grants[publicSale].length <= 0, "Cannot update public sale address !");
+        require(
+            grants[publicSale].length <= 0,
+            "Cannot update public sale address !"
+        );
         publicSale = _publicSale;
     }
 
     // update marketing address
     function updateMarketingAddress(address _marketing) public onlyOwner {
-        require(grants[marketing].length <= 0, "Cannot update marketing address !");
+        require(
+            grants[marketing].length <= 0,
+            "Cannot update marketing address !"
+        );
         marketing = _marketing;
     }
 
     // update stakingIncentiveDiscount address
-    function updateStakingIncentiveDiscountAddress(address _stakingIncentiveDiscount) public onlyOwner {
-        require(grants[stakingIncentiveDiscount].length <= 0, "Cannot update stakingIncentiveDiscount address !");
+    function updateStakingIncentiveDiscountAddress(
+        address _stakingIncentiveDiscount
+    ) public onlyOwner {
+        require(
+            grants[stakingIncentiveDiscount].length <= 0,
+            "Cannot update stakingIncentiveDiscount address !"
+        );
         stakingIncentiveDiscount = _stakingIncentiveDiscount;
     }
 
@@ -114,20 +134,50 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     // update treasury address
     function updateTreasuryAddress(address _treasury) public onlyOwner {
-        require(grants[treasury].length <= 0, "Cannot update treasury address !");
+        require(
+            grants[treasury].length <= 0,
+            "Cannot update treasury address !"
+        );
         treasury = _treasury;
     }
 
     // update vestingTimestamp
-    function updateVestingTimestamp(uint256 _vestingTimestamp) public onlyOwner {
-        require(grants[initialLiquidity].length <= 0, "Cannot update vestingTimestamp: initialliquidity !");
-        require(grants[privateSale].length <= 0, "Cannot update vestingTimestamp: privateSale !");
-        require(grants[publicSale].length <= 0, "Cannot update vestingTimestamp: publicSale !");
-        require(grants[marketing].length <= 0, "Cannot update vestingTimestamp: marketing !");
-        require(grants[stakingIncentiveDiscount].length <= 0, "Cannot update vestingTimestamp: stakingIncentiveDiscount !");
-        require(grants[advisor].length <= 0, "Cannot update vestingTimestamp: advisor !");
-        require(grants[team].length <= 0, "Cannot update vestingTimestamp: team !");
-        require(grants[treasury].length <= 0, "Cannot update vestingTimestamp: treasury !");
+    function updateVestingTimestamp(uint256 _vestingTimestamp)
+        public
+        onlyOwner
+    {
+        require(
+            grants[initialLiquidity].length <= 0,
+            "Cannot update vestingTimestamp: initialliquidity !"
+        );
+        require(
+            grants[privateSale].length <= 0,
+            "Cannot update vestingTimestamp: privateSale !"
+        );
+        require(
+            grants[publicSale].length <= 0,
+            "Cannot update vestingTimestamp: publicSale !"
+        );
+        require(
+            grants[marketing].length <= 0,
+            "Cannot update vestingTimestamp: marketing !"
+        );
+        require(
+            grants[stakingIncentiveDiscount].length <= 0,
+            "Cannot update vestingTimestamp: stakingIncentiveDiscount !"
+        );
+        require(
+            grants[advisor].length <= 0,
+            "Cannot update vestingTimestamp: advisor !"
+        );
+        require(
+            grants[team].length <= 0,
+            "Cannot update vestingTimestamp: team !"
+        );
+        require(
+            grants[treasury].length <= 0,
+            "Cannot update vestingTimestamp: treasury !"
+        );
         vestingTimestamp = _vestingTimestamp;
     }
 
@@ -188,12 +238,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     function createPublicVesting() public onlyOwner {
         require(grants[publicSale].length <= 0, "Already Created !");
-        addToTokenVesting(
-            publicSale,
-            100000000e18,
-            vestingTimestamp,
-            12 weeks
-        );
+        addToTokenVesting(publicSale, 100000000e18, vestingTimestamp, 12 weeks);
         addToTokenVesting(
             publicSale,
             100000000e18,
@@ -222,12 +267,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     function createMarketingVesting() public onlyOwner {
         require(grants[marketing].length <= 0, "Already Created !");
-        addToTokenVesting(
-            marketing,
-            125000000e18,
-            vestingTimestamp,
-            12 weeks
-        );
+        addToTokenVesting(marketing, 125000000e18, vestingTimestamp, 12 weeks);
         addToTokenVesting(
             marketing,
             125000000e18,
@@ -751,12 +791,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
 
     function createTreasuryVesting() public onlyOwner {
         require(grants[treasury].length <= 0, "Already Created !");
-        addToTokenVesting(
-            treasury,
-            250000000e18,
-            vestingTimestamp,
-            12 weeks
-        );
+        addToTokenVesting(treasury, 250000000e18, vestingTimestamp, 12 weeks);
         addToTokenVesting(
             treasury,
             62500000e18,

@@ -90,7 +90,10 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     );
 
     modifier onlyLemaGovernance() {
-        require(msg.sender == address(lemaGovernance), "Only LemaGovernance can perform this action");
+        require(
+            msg.sender == address(lemaGovernance),
+            "Only LemaGovernance can perform this action"
+        );
         _;
     }
 

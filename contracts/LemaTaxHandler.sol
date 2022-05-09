@@ -12,7 +12,11 @@ import "./utils/ExchangePoolProcessor.sol";
  * @title LemaTaxHandler
  * @notice This contract contains all the tax related logic for the LemaToken.
  */
-contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProcessor {
+contract LemaTaxHandler is
+    Initializable,
+    OwnableUpgradeable,
+    ExchangePoolProcessor
+{
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     /// @dev The set of addresses exempt from tax.
@@ -32,12 +36,12 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
     /**
      * @param initialTaxBasisPoints The number of tax basis points to start out with for tax calculations.
      */
-    function initialize(
-        uint256 initialTaxBasisPoints
-    ) public initializer {
+    function initialize(uint256 initialTaxBasisPoints) public initializer {
         __Ownable_init();
         taxBasisPoints = initialTaxBasisPoints;
-        uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);   // Pancakeswap Router V2
+        uniswapV2Router = IUniswapV2Router02(
+            0x10ED43C718714eb63d5aA57B78B54704E256024E
+        ); // Pancakeswap Router V2
     }
 
     /**
@@ -62,12 +66,18 @@ contract LemaTaxHandler is Initializable, OwnableUpgradeable, ExchangePoolProces
         }
 
         // If the transfer is to or from the uniswapV2Router, the tax is capped at 3% of the amount.
-        if ((beneficiary == address(uniswapV2Router) || benefactor == address(uniswapV2Router)) && taxBasisPoints > 300) {
+        if (
+            (beneficiary == address(uniswapV2Router) ||
+                benefactor == address(uniswapV2Router)) && taxBasisPoints > 300
+        ) {
             return (amount * 300) / 10000;
         }
 
         // Transactions between regular users (this includes contracts) aren't taxed.
-        if (!_exchangePools.contains(benefactor) && !_exchangePools.contains(beneficiary)) {
+        if (
+            !_exchangePools.contains(benefactor) &&
+            !_exchangePools.contains(beneficiary)
+        ) {
             return 0;
         }
 
