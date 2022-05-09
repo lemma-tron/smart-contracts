@@ -38,7 +38,6 @@ module.exports = async function (deployer, network, accounts) {
     LemaToken,
     [
       accounts[0], // burner address
-      treasuryAddress, // treasury address
       lemaTaxHandlerInstance.address, // taxHandler address
       "0x0000000000000000000000000000000000000000", // temp treasuryHandler address
     ],
