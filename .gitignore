@@ -7,3 +7,5 @@ coverage.json
 .openzeppelin/unknown-*.json
 
 package-lock.json
+.secret
+.bscScanAPIKey

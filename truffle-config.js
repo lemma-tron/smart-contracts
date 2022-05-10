@@ -18,12 +18,55 @@
  *
  */
 
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+
+const fs = require("fs");
+const mnemonic = fs.readFileSync(".secret").toString().trim();
+
+let bscScanAPIKey;
+if (fs.existsSync(".bscScanAPIKey")) {
+  bscScanAPIKey = fs.readFileSync(".bscScanAPIKey").toString().trim();
+}
+
 module.exports = {
   networks: {
     development: {
       host: "127.0.0.1", // Localhost (default: none)
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "*", // Any network (default: none)
+    },
+    ropsten: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `wss://ropsten.infura.io/ws/v3/711bf24ecb5e40dab226520f129b5ba9`
+        ),
+      network_id: 3, // Ropsten's id
+      gas: 5500000, // Ropsten has a lower block limit than mainnet
+      gasPrice: 288745396307,
+      // confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      // skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
+    testnet: {
+      provider: () =>
+        new HDWalletProvider(
+          mnemonic,
+          `https://data-seed-prebsc-1-s1.binance.org:8545/`
+        ),
+      network_id: 97,
+      // confirmations: 10,
+      networkCheckTimeoutnetworkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      skipDryRun: false,
+    },
+    bsc: {
+      provider: () =>
+        new HDWalletProvider(mnemonic, `https://bsc-dataseed.binance.org/`),
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true,
     },
   },
 
@@ -52,5 +95,13 @@ module.exports = {
     },
   },
 
-  plugins: ["truffle-contract-size", "solidity-coverage"],
+  plugins: [
+    "truffle-contract-size",
+    "solidity-coverage",
+    "truffle-plugin-verify",
+  ],
+
+  api_keys: {
+    bscscan: bscScanAPIKey,
+  },
 };
