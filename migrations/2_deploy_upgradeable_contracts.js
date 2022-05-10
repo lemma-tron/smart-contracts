@@ -7,14 +7,15 @@ const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
-const LemaTaxHandler = artifacts.require("LemaTaxHandler");
 const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
 
 module.exports = async function (deployer, network, accounts) {
+  const ownerAccount = accounts[0];
+  const treasuryAccount = accounts[7];
+  const treasuryCollectionAccount = accounts[8];
   const isDev = ["develop", "development"].includes(network);
   let busdAddress;
   let busdInstance;
-  let treasuryAddress = accounts[7];
   if (isDev) {
     busdInstance = await deployProxy(
       MockBEP20,
@@ -29,16 +30,10 @@ module.exports = async function (deployer, network, accounts) {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
-  const lemaTaxHandlerInstance = await deployProxy(LemaTaxHandler, [500], {
-    deployer,
-    initializer: "initialize",
-  });
-
   const lemaTokenInstance = await deployProxy(
     LemaToken,
     [
-      accounts[0], // burner address
-      lemaTaxHandlerInstance.address, // taxHandler address
+      ownerAccount, // burner address
       "0x0000000000000000000000000000000000000000", // temp treasuryHandler address
     ],
     {
@@ -50,12 +45,11 @@ module.exports = async function (deployer, network, accounts) {
   const treasuryHandlerAlphaInstance = await deployProxy(
     TreasuryHandlerAlpha,
     [
-      treasuryAddress, // treasury address
+      treasuryCollectionAccount, // treasury address
       busdAddress, // busd address
       lemaTokenInstance.address, // lema token address
       "0x10ED43C718714eb63d5aA57B78B54704E256024E", // router address
-      0, // initial liquidity basis points
-      0, // initial price impact basis points
+      500, // initial tax basis points
     ],
     {
       deployer,
@@ -69,7 +63,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
-    [accounts[0], busdAddress],
+    [ownerAccount, busdAddress],
     {
       deployer,
       initializer: "initialize",
@@ -80,7 +74,7 @@ module.exports = async function (deployer, network, accounts) {
     [
       lemaTokenInstance.address,
       busdAddress,
-      accounts[0],
+      ownerAccount,
       presaleLemaRefundVaultInstance.address,
     ],
     { deployer, initializer: "initialize" }
@@ -90,7 +84,7 @@ module.exports = async function (deployer, network, accounts) {
     LemaChefV2,
     [
       lemaTokenInstance.address, // _lemaToken
-      treasuryAddress, // _treasury
+      treasuryCollectionAccount, // _treasury
       0, // _startBlock
     ],
     { deployer, initializer: "initialize" }
@@ -120,14 +114,14 @@ module.exports = async function (deployer, network, accounts) {
     LemaTokenVesting,
     [
       lemaTokenInstance.address, // _lemaToken
-      accounts[0], // _initialLiquidity
+      ownerAccount, // _initialLiquidity
       accounts[1], // _privateSale
       accounts[2], // _publicSale
       accounts[3], // _marketing
       lemaChefInstance.address, // _stakingIncentiveDiscount
       accounts[5], // _advisor
       accounts[6], // _team
-      treasuryAddress, // _treasury
+      treasuryAccount, // _treasury
     ],
     { deployer, initializer: "initialize" }
   );

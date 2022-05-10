@@ -19,35 +19,25 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     uint256 private _cap;
     address public burnerAddress;
     address public lemaChefAddress;
-    address public treasuryAddress;
-
-    /// @notice The contract implementing tax calculations.
-    ITaxHandler public taxHandler;
 
     /// @notice The contract that performs treasury-related operations.
     ITreasuryHandler public treasuryHandler;
-
-    /// @notice Emitted when the tax handler contract is changed.
-    event TaxHandlerChanged(address oldAddress, address newAddress);
 
     /// @notice Emitted when the treasury handler contract is changed.
     event TreasuryHandlerChanged(address oldAddress, address newAddress);
 
     /**
      * @param _burnerAddress Address of the burner.
-     * @param _taxHandler Address of the LemaTaxHandler contract.
      * @param _treasuryHandlerAddress Address of the LemaTaxHandler contract.
      */
     function initialize(
         address _burnerAddress,
-        address _taxHandler,
         address _treasuryHandlerAddress
     ) public initializer {
         __ERC20_init("Lema Token", "LEMA");
         __Ownable_init();
         burnerAddress = _burnerAddress;
         _cap = 1e28; //10 billion
-        taxHandler = ITaxHandler(_taxHandler);
         treasuryHandler = ITreasuryHandler(_treasuryHandlerAddress);
     }
 
@@ -107,24 +97,6 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         lemaChefAddress = _newLemaChefAddress;
     }
 
-    /// @notice Updates treasury address. Must only be called by the owner.
-    function updateTreauryAddress(address _newTreasuryAddress)
-        public
-        onlyLemaChefOrOwner
-    {
-        treasuryAddress = _newTreasuryAddress;
-    }
-
-    /// @notice Updates tax handler address. Must only be called by the owner.
-    function updateTaxHandlerAddress(address _newTaxHandlerAddress)
-        public
-        onlyOwner
-    {
-        address oldTaxHandlerAddress = address(taxHandler);
-        taxHandler = ITaxHandler(_newTaxHandlerAddress);
-        emit TaxHandlerChanged(oldTaxHandlerAddress, _newTaxHandlerAddress);
-    }
-
     /// @notice Updates treasury handler address. Must only be called by the owner.
     function updateTreasuryHandlerAddress(address _newTreasuryHandlerAddress)
         public
@@ -155,12 +127,7 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
     ) internal override {
         treasuryHandler.beforeTransferHandler(from, to, amount);
 
-        uint256 taxAmount = taxHandler.getTax(from, to, amount);
-        super._transfer(from, to, amount.sub(taxAmount));
-
-        if (taxAmount > 0) {
-            super._transfer(from, address(treasuryHandler), taxAmount);
-        }
+        super._transfer(from, to, amount);
 
         treasuryHandler.afterTransferHandler(from, to, amount);
     }
