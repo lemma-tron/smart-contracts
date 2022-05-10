@@ -1,4 +1,3 @@
-const { time } = require("@openzeppelin/test-helpers");
 const timeMachine = require("ganache-time-traveler");
 
 const LemaToken = artifacts.require("LemaToken");
@@ -7,12 +6,14 @@ const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
 const MockBEP20 = artifacts.require("mock/MockBEP20");
 
 let lemaTokenInstance, presaleInstance, presaleVaultInstance, busdInstance;
+let currentTimestamp;
 
 contract("PresaleLemaV2", function (accounts) {
-  let snapshotId;
-  beforeEach(async () => {
-    let snapshot = await timeMachine.takeSnapshot();
-    snapshotId = snapshot["result"];
+  before("Deploy Contracts", async () => {
+    // May 15th 2022, 12 am (UTC)
+    currentTimestamp = 1652572800;
+
+    await timeMachine.advanceBlockAndSetTime(currentTimestamp);
 
     lemaTokenInstance = await LemaToken.deployed();
     presaleInstance = await PresaleLemaV2.deployed();
@@ -49,32 +50,40 @@ contract("PresaleLemaV2", function (accounts) {
     });
   });
 
+  let snapshotId;
+  beforeEach(async () => {
+    const snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot["result"];
+  });
+
   afterEach(async () => {
     await timeMachine.revertToSnapshot(snapshotId);
   });
 
-  it("should assert true", async () => {
-    assert(
-      lemaTokenInstance !== undefined,
-      "LemaToken contract should be defined"
-    );
+  describe("[Test Presale Basics]", () => {
+    it("should assert true", async () => {
+      assert(
+        lemaTokenInstance !== undefined,
+        "LemaToken contract should be defined"
+      );
 
-    assert(busdInstance !== undefined, "MockBUSD contract should be defined");
+      assert(busdInstance !== undefined, "MockBUSD contract should be defined");
 
-    assert(
-      presaleVaultInstance !== undefined,
-      "PresaleVault contract should be defined"
-    );
+      assert(
+        presaleVaultInstance !== undefined,
+        "PresaleVault contract should be defined"
+      );
 
-    return assert(
-      presaleInstance !== undefined,
-      "PresaleLemaV2 contract should be defined"
-    );
-  });
+      return assert(
+        presaleInstance !== undefined,
+        "PresaleLemaV2 contract should be defined"
+      );
+    });
 
-  it("should be 0", async () => {
-    const busdRaised = await presaleInstance.busdRaised();
-    assert.equal(busdRaised, 0);
+    it("should be 0", async () => {
+      const busdRaised = await presaleInstance.busdRaised();
+      assert.equal(busdRaised, 0);
+    });
   });
 
   describe("[Test Presale Variables]", () => {
@@ -90,7 +99,6 @@ contract("PresaleLemaV2", function (accounts) {
     });
 
     it("should update start and end time", async function () {
-      var currentTimestamp = Number(await time.latest());
       var updateStartTimestamp = currentTimestamp + 3600;
       await presaleInstance.setStartDate(updateStartTimestamp, {
         from: accounts[0],
@@ -107,9 +115,8 @@ contract("PresaleLemaV2", function (accounts) {
     });
   });
 
-  xdescribe("[Test Presale Buy functionalities]", () => {
+  describe("[Test Presale Buy functionalities]", () => {
     it("should allow buying LEMA token", async function () {
-      var currentTimestamp = Number(await time.latest());
       var updateStartTimestamp = currentTimestamp + 1800;
       await presaleInstance.setStartDate(updateStartTimestamp, {
         from: accounts[0],
@@ -128,9 +135,11 @@ contract("PresaleLemaV2", function (accounts) {
           from: accounts[2],
         }
       );
+
       await presaleInstance.buyTokensWithBUSD("10000000000000000000", {
         from: accounts[2],
       });
+
       assert.equal(
         (
           await busdInstance.balanceOf(await presaleInstance.vault())
@@ -142,12 +151,11 @@ contract("PresaleLemaV2", function (accounts) {
         (
           await presaleInstance.tokenToBeClaimed({ from: accounts[2] })
         ).toString(),
-        "41567942802510876534658"
+        "41600798735335891508439"
       );
     });
 
     it("should end presale and refund if goal not reached", async function () {
-      var currentTimestamp = Number(await time.latest());
       var updateStartTimestamp = currentTimestamp + 1800;
       await presaleInstance.setStartDate(updateStartTimestamp, {
         from: accounts[0],
@@ -166,9 +174,11 @@ contract("PresaleLemaV2", function (accounts) {
           from: accounts[3],
         }
       );
+
       await presaleInstance.buyTokensWithBUSD("10000000000000000000", {
         from: accounts[3],
       });
+
       assert.equal(
         (
           await busdInstance.balanceOf(await presaleInstance.vault())
@@ -199,10 +209,7 @@ contract("PresaleLemaV2", function (accounts) {
         "10000000000000000000"
       );
       await presaleInstance.claimRefund({ from: accounts[3] });
-      assert.equal(
-        (await presaleInstance.busdRaised()).toString(),
-        "0"
-      );
+      assert.equal((await presaleInstance.busdRaised()).toString(), "0");
       assert.equal(
         (
           await presaleInstance.tokenToBeClaimed({ from: accounts[3] })
@@ -210,30 +217,33 @@ contract("PresaleLemaV2", function (accounts) {
         "0"
       );
     });
+  });
 
+  describe("[Test Presale Overall Scenario]", () => {
     it("should end presale, mark goal reached, claim token (overall scenarios)", async function () {
-      var currentTimestamp = Number(await time.latest());
-      var updateStartTimestamp = currentTimestamp + 2000;
+      var updateStartTimestamp = currentTimestamp + 1800;
       await presaleInstance.setStartDate(updateStartTimestamp, {
         from: accounts[0],
       });
-      var updateEndTimestamp = updateStartTimestamp + 10000;
+      var updateEndTimestamp = updateStartTimestamp + 5000;
       await presaleInstance.setEndDate(updateEndTimestamp, {
         from: accounts[0],
       });
 
-      await timeMachine.advanceBlockAndSetTime(updateStartTimestamp + 5000);
+      await timeMachine.advanceBlockAndSetTime(updateStartTimestamp + 1000);
 
       await busdInstance.approve(
         await presaleInstance.vault(),
         "10000000000000000000",
         {
-          from: accounts[3],
+          from: accounts[4],
         }
       );
+
       await presaleInstance.buyTokensWithBUSD("10000000000000000000", {
-        from: accounts[3],
+        from: accounts[4],
       });
+
       assert.equal(
         (
           await busdInstance.balanceOf(await presaleInstance.vault())
@@ -243,176 +253,9 @@ contract("PresaleLemaV2", function (accounts) {
 
       assert.equal(
         (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[3] })
-        ).toString(),
-        "19033842171380751139826"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "10000000000000000000000",
-        {
-          from: accounts[4],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("10000000000000000000000", {
-        from: accounts[4],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "10010000000000000000000"
-      );
-      assert.equal(
-        (
           await presaleInstance.tokenToBeClaimed({ from: accounts[4] })
         ).toString(),
-        "400000000000000000000000"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "10000000000000000000000",
-        {
-          from: accounts[4],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("10000000000000000000000", {
-        from: accounts[4],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "30000000000000000000000"
-      );
-      assert.equal(
-        (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[4] })
-        ).toString(),
-        "400000000000000000000000"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "5000000000000000000000",
-        {
-          from: accounts[5],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("5000000000000000000000", {
-        from: accounts[5],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "35000000000000000000000"
-      );
-      assert.equal(
-        (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[5] })
-        ).toString(),
-        "166666666666666666666666"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "10000000000000000000000",
-        {
-          from: accounts[6],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("10000000000000000000000", {
-        from: accounts[6],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "45000000000000000000000"
-      );
-      assert.equal(
-        (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[6] })
-        ).toString(),
-        "285714285714285714285714"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "10000000000000000000000",
-        {
-          from: accounts[7],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("10000000000000000000000", {
-        from: accounts[7],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "55000000000000000000000"
-      );
-      assert.equal(
-        (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[7] })
-        ).toString(),
-        "222222222222222222222222"
-      );
-
-      await busdInstance.approve(
-        await presaleInstance.vault(),
-        "5000000000000000000000",
-        {
-          from: accounts[8],
-        }
-      );
-      await presaleInstance.buyTokensWithBUSD("5000000000000000000000", {
-        from: accounts[8],
-      });
-      assert.equal(
-        (
-          await busdInstance.balanceOf(await presaleInstance.vault())
-        ).toString(),
-        "60000000000000000000000"
-      );
-      assert.equal(
-        (
-          await presaleInstance.tokenToBeClaimed({ from: accounts[8] })
-        ).toString(),
-        "100000000000000000000000"
-      );
-
-      await timeMachine.advanceBlockAndSetTime(updateStartTimestamp + 11000);
-
-      assert.isTrue(await presaleInstance.goalReached({ from: accounts[0] }));
-      assert.isTrue(await presaleInstance.hasEnded({ from: accounts[0] }));
-
-      await presaleInstance.checkCompletedPresale({ from: accounts[2] });
-
-      assert.isNotTrue(
-        await presaleInstance.isRefunding({ from: accounts[0] })
-      );
-
-      await presaleInstance.setTokenClaimable(true, { from: accounts[0] });
-      assert.equal(
-        (await lemaTokenInstance.balanceOf(accounts[2])).toString(),
-        "0"
-      );
-      await presaleInstance.claimNenToken({ from: accounts[2] });
-      assert.equal(
-        (await lemaTokenInstance.balanceOf(accounts[2])).toString(),
-        "400000000000000000000000"
-      );
-
-      assert.equal((await busdInstance.balanceOf(accounts[1])).toString(), "0");
-      await presaleInstance.withdrawBUSDFromVault({ from: accounts[0] });
-      assert.equal(
-        (await busdInstance.balanceOf(accounts[1])).toString(),
-        "60000000000000000000000"
+        "41600798735335891508439"
       );
     });
   });

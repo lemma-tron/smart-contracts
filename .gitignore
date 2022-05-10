@@ -5,3 +5,5 @@ coverage
 coverage.json
 .vscode
 .openzeppelin/unknown-*.json
+
+package-lock.json

@@ -116,10 +116,10 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     }
 
     function getPrice() public view returns (uint256) {
-        uint256 daysPassed = ((block.timestamp.sub(startTime)).mul(1e18)).div(
+        uint256 daysPassed = ((block.timestamp.sub(startTime)).mul(1e20)).div(
             1 days
         );
-        uint256 duration = ((endTime.sub(startTime)).mul(1e18)).div(1 days);
+        uint256 duration = ((endTime.sub(startTime)).mul(1e20)).div(1 days);
         uint256 price = (
             startingPrice.add(
                 (((closingPrice.sub(startingPrice)).mul(daysPassed))).div(
