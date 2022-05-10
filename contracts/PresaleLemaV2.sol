@@ -120,14 +120,13 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
             1 days
         );
         uint256 duration = ((endTime.sub(startTime)).mul(1e20)).div(1 days);
-        uint256 price = (
+        return (
             startingPrice.add(
                 (((closingPrice.sub(startingPrice)).mul(daysPassed))).div(
                     duration
                 )
             )
         );
-        return price;
     }
 
     function buyTokensWithBUSD(uint256 _amount) public runningPreSaleOnly {
