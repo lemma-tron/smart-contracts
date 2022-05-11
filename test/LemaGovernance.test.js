@@ -29,10 +29,7 @@ contract("LemaGovernance", function (accounts) {
 
   it("should have treasury address", async () => {
     const treasuryAddress = await lemaStakingInstance.treasury();
-    return assert(
-      treasuryAddress === accounts[8],
-      "Treasury address should be defined"
-    );
+    return assert(treasuryAddress, "Treasury address should be defined");
   });
 
   it("should not have any projects", async () => {

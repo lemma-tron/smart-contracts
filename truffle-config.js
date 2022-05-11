@@ -18,15 +18,11 @@
  *
  */
 
+require("dotenv").config();
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 
-const fs = require("fs");
-const mnemonic = fs.readFileSync(".secret").toString().trim();
-
-let bscScanAPIKey;
-if (fs.existsSync(".bscScanAPIKey")) {
-  bscScanAPIKey = fs.readFileSync(".bscScanAPIKey").toString().trim();
-}
+const mnemonic = process.env.MNEMONIC_PHRASE;
+const bscScanAPIKey = process.env.BSC_SCAN_API_KEY;
 
 module.exports = {
   networks: {

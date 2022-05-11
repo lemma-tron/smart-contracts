@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
 const MockBEP20 = artifacts.require("MockBEP20");
@@ -11,11 +12,22 @@ const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
 
 module.exports = async function (deployer, network, accounts) {
   const ownerAccount = accounts[0];
-  const treasuryAccount = accounts[7];
-  const treasuryCollectionAccount = accounts[8];
+  const addressForInitialLiquidity =
+    process.env.ADDRESS_FOR_INITIAL_LIQUIDITY || ownerAccount;
+  const addressForPrivateSale =
+    process.env.ADDRESS_FOR_PRIVATE_SALE || accounts[1];
+  const addressForPublicSale =
+    process.env.ADDRESS_FOR_PUBLIC_SALE || accounts[2];
+  const addressForMarketing = process.env.ADDRESS_FOR_MARKETING || accounts[3];
+  const addressForAdvisor = process.env.ADDRESS_FOR_ADVISOR || accounts[4];
+  const addressForTeam = process.env.ADDRESS_FOR_TEAM || accounts[5];
+  const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
+  const treasuryCollectionAccount =
+    process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
   const isDev = ["develop", "development"].includes(network);
   const isTestNet = ["testnet"].includes(network);
   let busdAddress;
+  let routerAddress;
   let busdInstance;
   if (isDev) {
     busdInstance = await deployProxy(
@@ -27,12 +39,15 @@ module.exports = async function (deployer, network, accounts) {
       }
     );
     busdAddress = busdInstance.address;
+    routerAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248";
   }
 
   if (isTestNet) {
     busdAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248"; // https://testnet.bscscan.com/address/0xcf1aecc287027f797b99650b1e020ffa0fb0e248
+    routerAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248"; // https://testnet.bscscan.com/address/0xD99D1c33F9fC3444f8101754aBC46c52416550D1
   } else {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
+    routerAddress = "0x10ED43C718714eb63d5aA57B78B54704E256024E"; // https://bscscan.com/address/0x10ED43C718714eb63d5aA57B78B54704E256024E
   }
 
   const lemaTokenInstance = await deployProxy(
@@ -53,7 +68,7 @@ module.exports = async function (deployer, network, accounts) {
       treasuryCollectionAccount, // treasury address
       busdAddress, // busd address
       lemaTokenInstance.address, // lema token address
-      "0x10ED43C718714eb63d5aA57B78B54704E256024E", // router address
+      routerAddress, // router address
       500, // initial tax basis points
     ],
     {
@@ -119,13 +134,13 @@ module.exports = async function (deployer, network, accounts) {
     LemaTokenVesting,
     [
       lemaTokenInstance.address, // _lemaToken
-      ownerAccount, // _initialLiquidity
-      accounts[1], // _privateSale
-      accounts[2], // _publicSale
-      accounts[3], // _marketing
+      addressForInitialLiquidity, // _initialLiquidity
+      addressForPrivateSale, // _privateSale
+      addressForPublicSale, // _publicSale
+      addressForMarketing, // _marketing
       lemaChefInstance.address, // _stakingIncentiveDiscount
-      accounts[5], // _advisor
-      accounts[6], // _team
+      addressForAdvisor, // _advisor
+      addressForTeam, // _team
       treasuryAccount, // _treasury
     ],
     { deployer, initializer: "initialize" }

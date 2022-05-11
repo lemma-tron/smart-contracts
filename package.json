@@ -23,6 +23,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@openzeppelin/truffle-upgrades": "^1.15.0",
     "chai": "^4.3.4",
+    "dotenv": "^16.0.1",
     "eth-gas-reporter": "^0.2.22",
     "husky": "^8.0.1",
     "lint-staged": "^12.4.1",
