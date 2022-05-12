@@ -24,6 +24,9 @@ module.exports = async function (deployer, network, accounts) {
   const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
   const treasuryCollectionAccount =
     process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
+  const whitelistedAddressesList = process.env.WHITELISTED_ADDRESSES
+    ? JSON.parse(process.env.WHITELISTED_ADDRESSES)
+    : [...accounts.slice(0, 8)];
   const isDev = ["develop", "development"].includes(network);
   const isTestNet = ["testnet"].includes(network);
   let busdAddress;
@@ -40,9 +43,7 @@ module.exports = async function (deployer, network, accounts) {
     );
     busdAddress = busdInstance.address;
     routerAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248";
-  }
-
-  if (isTestNet) {
+  } else if (isTestNet) {
     busdAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248"; // https://testnet.bscscan.com/address/0xcf1aecc287027f797b99650b1e020ffa0fb0e248
     routerAddress = "0xcf1aecc287027f797b99650b1e020ffa0fb0e248"; // https://testnet.bscscan.com/address/0xD99D1c33F9fC3444f8101754aBC46c52416550D1
   } else {
@@ -122,6 +123,7 @@ module.exports = async function (deployer, network, accounts) {
       startDate, // _governanceVotingStart
       endDate, // _governanceVotingEnd
       lemaChefInstance.address, // LemaChef address
+      whitelistedAddressesList, // _whitelistedAddresses
     ],
     { deployer, initializer: "initialize" }
   );

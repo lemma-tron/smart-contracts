@@ -2,8 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
 abstract contract LemaValidators is OwnableUpgradeable {
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+
     address[] private validators;
     mapping(address => bool) private validatorExists;
     uint256 private numberOfValidatorAllowed;
@@ -13,6 +16,8 @@ abstract contract LemaValidators is OwnableUpgradeable {
     mapping(address => uint256) private voteCount;
     mapping(address => uint256) private votingPower;
     mapping(address => bool) private blocklisted;
+    EnumerableSetUpgradeable.AddressSet private whitelisted;
+    uint256 private previlegeForValidatorTill;
 
     modifier validValidatorsOnly() {
         require(
@@ -22,10 +27,28 @@ abstract contract LemaValidators is OwnableUpgradeable {
         _;
     }
 
-    function __LemaValidators_init() public initializer {
+    modifier previlegedApplied() {
+        require(
+            block.timestamp > previlegeForValidatorTill ||
+                whitelisted.contains(msg.sender),
+            "LemaGovernance: You are not previleged for the action. Please wait"
+        );
+        _;
+    }
+
+    function __LemaValidators_init(address[] memory _whitelisted)
+        public
+        initializer
+    {
         __Ownable_init();
         numberOfValidatorAllowed = 10;
         validatorMinStake = 200;
+
+        for (uint256 i = 0; i < _whitelisted.length; i++) {
+            whitelisted.add(_whitelisted[i]);
+        }
+
+        previlegeForValidatorTill = block.timestamp + 1 weeks;
     }
 
     function getValidators() public view returns (address[] memory) {
@@ -34,6 +57,10 @@ abstract contract LemaValidators is OwnableUpgradeable {
 
     function getVoteCount(address validator) public view returns (uint256) {
         return voteCount[validator];
+    }
+
+    function getWhitelistedValidators() public view returns (address[] memory) {
+        return whitelisted.values();
     }
 
     function getValidatorsWhoHaveNotCastedVotes()
@@ -104,7 +131,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
     }
 
     // apply for validator
-    function applyForValidator() public virtual {
+    function applyForValidator() public virtual previlegedApplied {
         require(!blocklisted[msg.sender], "LemaGovernance: Blocklisted wallet");
         require(
             validators.length < numberOfValidatorAllowed,

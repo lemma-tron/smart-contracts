@@ -324,3 +324,68 @@ contract("LemaGovernance: Time-Based test cases", function (accounts) {
     }
   });
 });
+
+contract("LemaGovernance: Validator", function (accounts) {
+  let snapshotId;
+  beforeEach(async () => {
+    let snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot["result"];
+  });
+  afterEach(async () => {
+    await timeMachine.revertToSnapshot(snapshotId);
+  });
+
+  it("should assert true", async () => {
+    lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaStakingInstance = await LemaChefV2.deployed();
+    lemaTokenInstance = await LemaToken.deployed();
+    assert(
+      lemaTokenInstance !== undefined,
+      "LemaToken contract should be defined"
+    );
+    assert(
+      lemaStakingInstance !== undefined,
+      "LemaChef contract should be defined"
+    );
+    return assert(
+      lemaGovernanceInstance !== undefined,
+      "LemaGovernance contract should be defined"
+    );
+  });
+
+  it("should have whitelisted addresses", async () => {
+    const whitelistedValidators =
+      await lemaGovernanceInstance.getWhitelistedValidators();
+
+    // console.log("Whitelisted Validators:", whitelistedValidators);
+    assert(whitelistedValidators);
+  });
+
+  it("should not let non-whitelisted wallets apply for validator in the first week of contract deployment", async () => {
+    try {
+      await lemaGovernanceInstance.applyForValidator({ from: accounts[9] });
+      assert(false, "should have thrown");
+    } catch (error) {
+      assert.equal(
+        error.reason,
+        "LemaGovernance: You are not previleged for the action. Please wait"
+      );
+    }
+  });
+
+  it("should let non-whitelisted wallets apply for validator after the first week of contract deployment", async () => {
+    await lemaTokenInstance.mint(accounts[9], 200);
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[9],
+    });
+
+    await lemaStakingInstance.enterStaking(200, { from: accounts[9] });
+
+    await timeMachine.advanceTimeAndBlock(60 * 60 * 24 * 7);
+
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[9] });
+
+    const validators = await lemaGovernanceInstance.getValidators();
+    assert.equal(validators.length, 1);
+  });
+});

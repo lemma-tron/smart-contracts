@@ -75,10 +75,11 @@ contract LemaGovernance is
     function initialize(
         uint256 _governanceVotingStart,
         uint256 _governanceVotingEnd,
-        LemaChefV2 _lemaChef
+        LemaChefV2 _lemaChef,
+        address[] memory _whitelisted
     ) public initializer {
         __Ownable_init();
-        __LemaValidators_init();
+        __LemaValidators_init(_whitelisted);
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
         lemaChef = _lemaChef;
