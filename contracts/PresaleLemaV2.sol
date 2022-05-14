@@ -35,16 +35,11 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     // The wallet that holds the BUSD raised on the presale
     address public wallet;
 
-    uint256 public constant TOTAL_TOKENS = 400000000;
-
     // The amount of BUSD raised
     uint256 public busdRaised;
 
     // The amount of tokens raised
     uint256 public tokensRaised;
-
-    // Minimum amount of BUSD to be raised. 20k BUSD
-    uint256 public constant MIN_GOAL = 20000 * 1e18;
 
     // If the presale wasn't successful, this will be true and users will be able
     // to claim the refund of their BUSD
@@ -80,6 +75,9 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
 
     // To indicate buyer has claimed token
     event TokenClaimed(address indexed buyer, uint256 claimedToken);
+
+    // Indicates if the refund is enabled
+    event RefundEnabled();
 
     // Indicates if the presale has ended
     event Finalized();
@@ -180,21 +178,27 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
             !isEnded,
             "Presale has ended and required action has been taken."
         );
-        if (hasEnded() && !goalReached()) {
-            vault.enableRefunds();
-            isRefunding = true;
-            isEnded = true;
-            emit Finalized();
-        } else if (hasEnded() && goalReached()) {
+
+        if (hasEnded()) {
             vault.close();
             isEnded = true;
             emit Finalized();
         }
     }
 
-    /// @notice If presale is unsuccessful, investors can claim refunds here
+    /// @notice If presale is unsuccessful, owner can enable refund.
+    function enableRefund() public onlyOwner {
+        require(hasEnded(), "Presale has not ended");
+        require(!isRefunding, "Required action has been taken.");
+
+        vault.enableRefunds();
+        isRefunding = true;
+        emit RefundEnabled();
+    }
+
+    /// @notice If refund is enabled, investors can claim refunds here
     function claimRefund() public {
-        require(hasEnded() && !goalReached() && isRefunding);
+        require(hasEnded() && isRefunding, "Refund not available");
         require(presaleBalances[msg.sender] > 0, "No amount to be refunded");
 
         uint256 claimedBUSD = presaleBalances[msg.sender];
@@ -220,26 +224,18 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         return tokenToBeTransferred[msg.sender];
     }
 
-    /// @notice To see if the minimum goal of BUSD raied has been reached
-    /// @return bool True if the BUSD raised are bigger than the goal or false otherwise
-    function goalReached() public view returns (bool) {
-        return busdRaised >= MIN_GOAL;
-    }
-
     /// @notice Public function to check if the presale has ended or not
     function hasEnded() public view returns (bool) {
         return block.timestamp > endTime;
     }
 
+    /// @notice decides if investors can claim tokens or not, usually enabled after token is vested
     function setTokenClaimable(bool _claimable) public onlyOwner {
         tokenClaimable = _claimable;
     }
 
     function claimLemaToken() public {
-        require(
-            hasEnded() && goalReached(),
-            "Presale not ended and goal not reached"
-        );
+        require(hasEnded(), "Presale not ended");
         require(!isRefunding, "Cannot claim token in Refunding state");
         require(
             tokenClaimable,

@@ -183,12 +183,11 @@ contract("PresaleLemaV2", function (accounts) {
 
       await timeMachine.advanceBlockAndSetTime(updateStartTimestamp + 5100);
 
-      assert.isNotTrue(
-        await presaleInstance.goalReached({ from: accounts[0] })
-      );
       assert.isTrue(await presaleInstance.hasEnded({ from: accounts[0] }));
 
       await presaleInstance.checkCompletedPresale({ from: accounts[3] });
+
+      await presaleInstance.enableRefund({ from: accounts[0] });
 
       assert.isTrue(await presaleInstance.isRefunding({ from: accounts[0] }));
 
