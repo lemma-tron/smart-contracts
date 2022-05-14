@@ -74,7 +74,7 @@ contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
     }
 
     function enableRefunds() public onlyOwner {
-        require(state == State.Active, "Requires Active state");
+        require(state == State.Closed, "Requires Closed state");
         state = State.Refunding;
         emit RefundsEnabled();
     }
