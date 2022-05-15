@@ -8,3 +8,5 @@ coverage.json
 
 package-lock.json
 .env
+
+flatten
