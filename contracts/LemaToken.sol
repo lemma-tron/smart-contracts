@@ -30,10 +30,10 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
      * @param _burnerAddress Address of the burner.
      * @param _treasuryHandlerAddress Address of the LemaTaxHandler contract.
      */
-    function initialize(
-        address _burnerAddress,
-        address _treasuryHandlerAddress
-    ) public initializer {
+    function initialize(address _burnerAddress, address _treasuryHandlerAddress)
+        public
+        initializer
+    {
         __ERC20_init("Lema Token", "LEMA");
         __Ownable_init();
         burnerAddress = _burnerAddress;
@@ -130,5 +130,7 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         super._transfer(from, to, amount);
 
         treasuryHandler.afterTransferHandler(from, to, amount);
+
+        emit Transfer(from, to, amount);
     }
 }
