@@ -27,7 +27,16 @@ contract LemaTaxHandler is
     /// @notice How much tax to collect in basis points. 10,000 basis points is 100%.
     uint256 public taxBasisPoints;
 
-    IUniswapV2Router02 public uniswapV2Router;
+    /// @notice How much tax to collect in basis points. 10,000 basis points is 100%. This is for uniswap.
+    uint256 public uniswapTaxBasisPoints;
+
+    address public uniswapV2RouterAddress;
+
+    /// @notice Emitted when the tax basis points number is updated.
+    event UniswapTaxBasisPointsUpdated(
+        uint256 oldUniswapTaxBasisPoints,
+        uint256 newUniswapTaxBasisPoints
+    );
 
     /// @notice Emitted when the tax basis points number is updated.
     event TaxBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
@@ -38,12 +47,14 @@ contract LemaTaxHandler is
     /**
      * @param initialTaxBasisPoints The number of tax basis points to start out with for tax calculations.
      */
-    function initialize(uint256 initialTaxBasisPoints) public initializer {
+    function initialize(
+        uint256 initialTaxBasisPoints,
+        address _uniswapV2RouterAddress
+    ) public initializer {
         __Ownable_init();
         taxBasisPoints = initialTaxBasisPoints;
-        uniswapV2Router = IUniswapV2Router02(
-            0x10ED43C718714eb63d5aA57B78B54704E256024E
-        ); // Pancakeswap Router V2
+        uniswapV2RouterAddress = _uniswapV2RouterAddress;
+        uniswapTaxBasisPoints = 200; //2%
     }
 
     /**
@@ -67,20 +78,20 @@ contract LemaTaxHandler is
             return 0;
         }
 
-        // If the transfer is to or from the uniswapV2Router, the tax is capped at 3% of the amount.
-        if (
-            (beneficiary == address(uniswapV2Router) ||
-                benefactor == address(uniswapV2Router)) && taxBasisPoints > 300
-        ) {
-            return (amount * 300) / 10000;
-        }
-
         // Transactions between regular users (this includes contracts) aren't taxed.
         if (
             !_exchangePools.contains(benefactor) &&
             !_exchangePools.contains(beneficiary)
         ) {
             return 0;
+        }
+
+        // If the transfer is to or from the uniswapV2Router, the tax is capped at 3% of the amount.
+        if (
+            (beneficiary == uniswapV2RouterAddress ||
+                benefactor == uniswapV2RouterAddress)
+        ) {
+            return (amount * uniswapTaxBasisPoints) / 10000;
         }
 
         return (amount * taxBasisPoints) / 10000;
@@ -100,6 +111,28 @@ contract LemaTaxHandler is
         taxBasisPoints = newBasisPoints;
 
         emit TaxBasisPointsUpdated(oldBasisPoints, newBasisPoints);
+    }
+
+    /**
+     * @notice Set new number for tax basis points for uniswap. This number can only ever be lowered.
+     * @param newUniswapTaxBasisPoints New uniswap tax basis points number to set for calculations.
+     */
+    function setUniswapTaxBasisPoints(uint256 newUniswapTaxBasisPoints)
+        external
+        onlyOwner
+    {
+        require(
+            newUniswapTaxBasisPoints < uniswapTaxBasisPoints,
+            "LemaTaxHandler:setTaxBasisPoints:HIGHER_VALUE: Basis points can only be lowered."
+        );
+
+        uint256 oldUniswapTaxBasisPoints = uniswapTaxBasisPoints;
+        uniswapTaxBasisPoints = newUniswapTaxBasisPoints;
+
+        emit UniswapTaxBasisPointsUpdated(
+            oldUniswapTaxBasisPoints,
+            newUniswapTaxBasisPoints
+        );
     }
 
     /**

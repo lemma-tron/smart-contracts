@@ -27,25 +27,16 @@ contract TreasuryHandlerAlpha is
     using AddressUpgradeable for address payable;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
-    /// @dev The set of addresses exempt from tax.
-    EnumerableSetUpgradeable.AddressSet private _exempted;
-
     /// @notice The treasury address.
-    address payable public treasury;
+    address public treasury;
 
     /// @notice The BUSD token address.
     IERC20Upgradeable public busdToken;
     /// @notice The token that accumulates through taxes. This will be sold for BUSD.
     IERC20Upgradeable public token;
 
-    /// @notice How much tax to collect in basis points. 10,000 basis points is 100%.
-    uint256 public taxBasisPoints;
-
     /// @notice The Uniswap router that handles the sell and liquidity operations.
     IUniswapV2Router02 public router;
-
-    /// @notice Emitted when the basis points value of tokens to collect as tax is updated.
-    event TaxBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
 
     /// @notice Emitted when the treasury address is updated.
     event TreasuryAddressUpdated(
@@ -53,38 +44,41 @@ contract TreasuryHandlerAlpha is
         address newTreasuryAddress
     );
 
-    /// @notice Emitted when an address is added to or removed from the exempted addresses set.
-    event TaxExemptionUpdated(address indexed wallet, bool exempted);
+    /// @notice Emitted when the busd address is updated.
+    event BUSDAddressUpdated(address oldBUSDAddress, address newBUSDAddress);
+
+    /// @notice Emitted when the token address is updated.
+    event TokenAddressUpdated(address oldTokenAddress, address newTokenAddress);
+
+    /// @notice Emitted when the router address is updated.
+    event RouterAddressUpdated(
+        address oldRouterAddress,
+        address newRouterAddress
+    );
 
     /**
      * @param treasuryAddress Address of treasury to use.
      * @param busdTokenAddress Address of busd token.
      * @param tokenAddress Address of token to accumulate and sell.
      * @param routerAddress Address of Uniswap router for sell and liquidity operations.
-     * @param initialTaxBasisPoints Initial basis points value of tax to collect in the treasury.
      */
     function initialize(
         address treasuryAddress,
         address busdTokenAddress,
         address tokenAddress,
-        address routerAddress,
-        uint256 initialTaxBasisPoints
+        address routerAddress
     ) public initializer {
         __Ownable_init();
         __LenientReentrancyGuard_init();
-        treasury = payable(treasuryAddress);
+        treasury = treasuryAddress;
         busdToken = IERC20Upgradeable(busdTokenAddress);
         token = IERC20Upgradeable(tokenAddress);
         router = IUniswapV2Router02(routerAddress);
-        taxBasisPoints = initialTaxBasisPoints;
     }
 
     /**
-     * @notice Perform operations before a sell action (or a liquidity addition) is executed. The accumulated tokens are
-     * then sold for BUSD. In case the number of accumulated tokens exceeds the price impact percentage threshold, then
-     * the number will be adjusted to stay within the threshold. If a non-zero percentage is set for liquidity, then
-     * that percentage will be added to the primary liquidity pool instead of being sold for BUSD and sent to the
-     * treasury.
+     * @notice Perform operations before a buy or sell action is executed. The accumulated tokens are
+     * then sold for BUSD and sent to the treasury.
      * @param benefactor Address of the benefactor.
      * @param beneficiary Address of the beneficiary.
      * @param amount Number of tokens in the transfer.
@@ -98,30 +92,27 @@ contract TreasuryHandlerAlpha is
         benefactor;
         amount;
 
-        // No actions are done on transfers other than sells.
-        if (!_exchangePools.contains(beneficiary)) {
+        // No actions are done on transfers other than buy or sells.
+        if (
+            !_exchangePools.contains(benefactor) &&
+            !_exchangePools.contains(beneficiary)
+        ) {
             return;
         }
 
-        uint256 currentWeiBalance = busdToken.balanceOf(address(this));
-        _swapTokensForBUSD(amount);
+        uint256 contractTokenBalance = token.balanceOf(address(this));
+        if (contractTokenBalance > 0) {
+            uint256 currentBUSDBalance = busdToken.balanceOf(address(this));
+            _swapTokensForBUSD(amount);
+            uint256 busdEarned = busdToken.balanceOf(address(this)) -
+                currentBUSDBalance;
+            busdToken.transfer(address(treasury), busdEarned);
 
-        if (!_exempted.contains(benefactor)) {
-            uint256 weiEarned = busdToken.balanceOf(address(this)) -
-                currentWeiBalance;
-
-            // No need to divide this number, because that was only to have enough tokens remaining to pair with this
-            // BUSD value.
-            uint256 weiForTax = (weiEarned * taxBasisPoints) / 10000;
-
-            busdToken.transfer(address(treasury), weiForTax);
-        }
-
-        // It's cheaper to get the active balance rather than calculating based off of the `currentWeiBalance` and
-        // `weiForLiquidity` numbers.
-        uint256 remainingWeiBalance = busdToken.balanceOf(address(this));
-        if (remainingWeiBalance > 0) {
-            busdToken.transfer(msg.sender, remainingWeiBalance);
+            // It's cheaper to get the active balance rather than calculating based off of the `currentBUSDBalance`
+            uint256 remainingBUSDBalance = busdToken.balanceOf(address(this));
+            if (remainingBUSDBalance > 0) {
+                busdToken.transfer(msg.sender, remainingBUSDBalance);
+            }
         }
     }
 
@@ -145,35 +136,67 @@ contract TreasuryHandlerAlpha is
     }
 
     /**
-     * @notice Set new tax basis points value.
-     * @param newBasisPoints New tax basis points value. Cannot exceed 10,000 (i.e., 100%) as that would break the
-     * calculation.
-     */
-    function setTaxBasisPoints(uint256 newBasisPoints) external onlyOwner {
-        require(
-            newBasisPoints <= 10000,
-            "TreasuryHandlerAlpha:setTaxPercentage:INVALID_PERCENTAGE: Cannot set more than 10,000 basis points."
-        );
-        uint256 oldBasisPoints = taxBasisPoints;
-        taxBasisPoints = newBasisPoints;
-
-        emit TaxBasisPointsUpdated(oldBasisPoints, newBasisPoints);
-    }
-
-    /**
      * @notice Set new treasury address.
-     * @param newTreasuryAddress New treasury address.
+     * @param _newTreasuryAddress New treasury address.
      */
-    function setTreasury(address newTreasuryAddress) external onlyOwner {
+    function setTreasury(address _newTreasuryAddress) external onlyOwner {
         require(
-            newTreasuryAddress != address(0),
+            _newTreasuryAddress != address(0),
             "TreasuryHandlerAlpha:setTreasury:ZERO_TREASURY: Cannot set zero address as treasury."
         );
 
         address oldTreasuryAddress = address(treasury);
-        treasury = payable(newTreasuryAddress);
+        treasury = payable(_newTreasuryAddress);
 
-        emit TreasuryAddressUpdated(oldTreasuryAddress, newTreasuryAddress);
+        emit TreasuryAddressUpdated(oldTreasuryAddress, _newTreasuryAddress);
+    }
+
+    /**
+     * @notice Set new BUSD address.
+     * @param _newBUSDAddress New BUSD address.
+     */
+    function updateBUSDAddress(address _newBUSDAddress) external onlyOwner {
+        require(
+            _newBUSDAddress != address(0),
+            "TreasuryHandlerAlpha:updateBUSDAddress:ZERO_BUSD: Cannot set zero address as BUSD."
+        );
+
+        address oldBUSDAddress = address(busdToken);
+        busdToken = IERC20Upgradeable(_newBUSDAddress);
+
+        emit BUSDAddressUpdated(oldBUSDAddress, _newBUSDAddress);
+    }
+
+    /**
+     * @notice Set new Token address.
+     * @param _newTokenAddress New Token address.
+     */
+    function updateTokenAddress(address _newTokenAddress) external onlyOwner {
+        require(
+            _newTokenAddress != address(0),
+            "TreasuryHandlerAlpha:updateTokenAddress:ZERO_TOKEN: Cannot set zero address as Token."
+        );
+
+        address oldTokenAddress = address(token);
+        token = IERC20Upgradeable(_newTokenAddress);
+
+        emit TokenAddressUpdated(oldTokenAddress, _newTokenAddress);
+    }
+
+    /**
+     * @notice Set new Router address.
+     * @param _newRouterAddress New Router address.
+     */
+    function updateRouterAddress(address _newRouterAddress) external onlyOwner {
+        require(
+            _newRouterAddress != address(0),
+            "TreasuryHandlerAlpha:updateRouterAddress:ZERO_ROUTER: Cannot set zero address as Router."
+        );
+
+        address oldRouterAddress = address(router);
+        router = IUniswapV2Router02(_newRouterAddress);
+
+        emit RouterAddressUpdated(oldRouterAddress, _newRouterAddress);
     }
 
     /**
@@ -217,26 +240,6 @@ contract TreasuryHandlerAlpha is
             address(this),
             block.timestamp
         );
-    }
-
-    /**
-     * @notice Add address to set of tax-exempted addresses.
-     * @param exemption Address to add to set of tax-exempted addresses.
-     */
-    function addExemption(address exemption) external onlyOwner {
-        if (_exempted.add(exemption)) {
-            emit TaxExemptionUpdated(exemption, true);
-        }
-    }
-
-    /**
-     * @notice Remove address from set of tax-exempted addresses.
-     * @param exemption Address to remove from set of tax-exempted addresses.
-     */
-    function removeExemption(address exemption) external onlyOwner {
-        if (_exempted.remove(exemption)) {
-            emit TaxExemptionUpdated(exemption, false);
-        }
     }
 
     /**

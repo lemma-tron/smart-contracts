@@ -8,6 +8,7 @@ const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
+const TaxHandler = artifacts.require("LemaTaxHandler");
 const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
 
 module.exports = async function (deployer, network, accounts) {
@@ -56,6 +57,7 @@ module.exports = async function (deployer, network, accounts) {
     [
       ownerAccount, // burner address
       "0x0000000000000000000000000000000000000000", // temp treasuryHandler address
+      "0x0000000000000000000000000000000000000000", // temp taxHandler address
     ],
     {
       deployer,
@@ -70,7 +72,18 @@ module.exports = async function (deployer, network, accounts) {
       busdAddress, // busd address
       lemaTokenInstance.address, // lema token address
       routerAddress, // router address
-      500, // initial tax basis points
+    ],
+    {
+      deployer,
+      initializer: "initialize",
+    }
+  );
+
+  const taxHandlerInstance = await deployProxy(
+    TaxHandler,
+    [
+      0, // 0% for rest of exchanges
+      routerAddress, // router address
     ],
     {
       deployer,
@@ -81,6 +94,8 @@ module.exports = async function (deployer, network, accounts) {
   await lemaTokenInstance.updateTreasuryHandlerAddress(
     treasuryHandlerAlphaInstance.address
   );
+
+  await lemaTokenInstance.updateTaxHandlerAddress(taxHandlerInstance.address);
 
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
