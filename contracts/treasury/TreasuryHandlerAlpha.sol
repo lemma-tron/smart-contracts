@@ -24,14 +24,14 @@ contract TreasuryHandlerAlpha is
     LenientReentrancyGuard,
     ExchangePoolProcessor
 {
-    using AddressUpgradeable for address;
+    using AddressUpgradeable for address payable;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     /// @dev The set of addresses exempt from tax.
     EnumerableSetUpgradeable.AddressSet private _exempted;
 
     /// @notice The treasury address.
-    address public treasury;
+    address payable public treasury;
 
     /// @notice The BUSD token address.
     IERC20Upgradeable public busdToken;
@@ -45,17 +45,14 @@ contract TreasuryHandlerAlpha is
     IUniswapV2Router02 public router;
 
     /// @notice Emitted when the basis points value of tokens to collect as tax is updated.
-    event TaxBasisPointsUpdated(
-        uint256 oldBasisPoints,
-        uint256 newBasisPoints
-    );
+    event TaxBasisPointsUpdated(uint256 oldBasisPoints, uint256 newBasisPoints);
 
     /// @notice Emitted when the treasury address is updated.
     event TreasuryAddressUpdated(
         address oldTreasuryAddress,
         address newTreasuryAddress
     );
-    
+
     /// @notice Emitted when an address is added to or removed from the exempted addresses set.
     event TaxExemptionUpdated(address indexed wallet, bool exempted);
 
@@ -75,7 +72,7 @@ contract TreasuryHandlerAlpha is
     ) public initializer {
         __Ownable_init();
         __LenientReentrancyGuard_init();
-        treasury = treasuryAddress;
+        treasury = payable(treasuryAddress);
         busdToken = IERC20Upgradeable(busdTokenAddress);
         token = IERC20Upgradeable(tokenAddress);
         router = IUniswapV2Router02(routerAddress);
@@ -115,8 +112,7 @@ contract TreasuryHandlerAlpha is
 
             // No need to divide this number, because that was only to have enough tokens remaining to pair with this
             // BUSD value.
-            uint256 weiForTax = (weiEarned * taxBasisPoints) /
-                10000;
+            uint256 weiForTax = (weiEarned * taxBasisPoints) / 10000;
 
             busdToken.transfer(address(treasury), weiForTax);
         }
@@ -153,10 +149,7 @@ contract TreasuryHandlerAlpha is
      * @param newBasisPoints New tax basis points value. Cannot exceed 10,000 (i.e., 100%) as that would break the
      * calculation.
      */
-    function setTaxBasisPoints(uint256 newBasisPoints)
-        external
-        onlyOwner
-    {
+    function setTaxBasisPoints(uint256 newBasisPoints) external onlyOwner {
         require(
             newBasisPoints <= 10000,
             "TreasuryHandlerAlpha:setTaxPercentage:INVALID_PERCENTAGE: Cannot set more than 10,000 basis points."
@@ -224,7 +217,7 @@ contract TreasuryHandlerAlpha is
             address(this),
             block.timestamp
         );
-    } 
+    }
 
     /**
      * @notice Add address to set of tax-exempted addresses.
