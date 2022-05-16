@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
-import "./tax/ITaxHandler.sol";
 import "./treasury/ITreasuryHandler.sol";
 
 /**
@@ -120,17 +119,54 @@ contract LemaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         _burn(_from, _amount);
     }
 
+    /**
+     * @notice Transfer tokens from caller's address to another.
+     * @param recipient Address to send the caller's tokens to.
+     * @param amount The number of tokens to transfer to recipient.
+     * @return True if transfer succeeds, else an error is raised.
+     */
+    function transfer(address recipient, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * NOTE: Does not update the allowance if the current allowance
+     * is the maximum `uint256`.
+     *
+     * Requirements:
+     *
+     * - `from` and `to` cannot be the zero address.
+     * - `from` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``from``'s tokens of at least
+     * `amount`.
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
+        super._spendAllowance(from, _msgSender(), amount);
+        _transfer(from, to, amount);
+        return true;
+    }
+
     function _transfer(
         address from,
         address to,
         uint256 amount
     ) internal override {
         treasuryHandler.beforeTransferHandler(from, to, amount);
-
         super._transfer(from, to, amount);
-
         treasuryHandler.afterTransferHandler(from, to, amount);
-
-        emit Transfer(from, to, amount);
     }
 }

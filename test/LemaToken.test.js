@@ -34,6 +34,22 @@ contract("LemaToken", function (accounts) {
     assert.equal(cap, 1e28);
   });
 
+  it("should mint and transfer", async () => {
+    await lemaTokenInstance.mint(accounts[0], "500", { from: accounts[0] });
+
+    assert.equal(
+      (await lemaTokenInstance.balanceOf(accounts[0])).toString(),
+      "500"
+    );
+
+    await lemaTokenInstance.transfer(accounts[1], "200", { from: accounts[0] });
+
+    assert.equal(
+      (await lemaTokenInstance.balanceOf(accounts[1])).toString(),
+      "200"
+    );
+  });
+
   // it("should deduct 0% tax on normal transfers", async () => {
   //   await lemaTokenInstance.mint(accounts[0], 10000);
 
