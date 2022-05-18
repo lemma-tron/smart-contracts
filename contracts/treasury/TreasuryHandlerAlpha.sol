@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../utils/Pausable.sol";
 
 import "../utils/ExchangePoolProcessor.sol";
 import "../utils/LenientReentrancyGuard.sol";
@@ -20,6 +21,7 @@ import "./ITreasuryHandler.sol";
 contract TreasuryHandlerAlpha is
     Initializable,
     OwnableUpgradeable,
+    Pausable,
     ITreasuryHandler,
     LenientReentrancyGuard,
     ExchangePoolProcessor
@@ -69,6 +71,7 @@ contract TreasuryHandlerAlpha is
         address routerAddress
     ) public initializer {
         __Ownable_init();
+        __PausableUpgradeable_init();
         __LenientReentrancyGuard_init();
         treasury = treasuryAddress;
         busdToken = IERC20Upgradeable(busdTokenAddress);
@@ -87,7 +90,7 @@ contract TreasuryHandlerAlpha is
         address benefactor,
         address beneficiary,
         uint256 amount
-    ) external override nonReentrant {
+    ) external override nonReentrant whenNotPaused {
         // Silence a few warnings. This will be optimized out by the compiler.
         benefactor;
         amount;

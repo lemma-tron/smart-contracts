@@ -6,14 +6,15 @@ import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./utils/Pausable.sol";
 
 import "./lib/VotingPower.sol";
 
 import "./LemaToken.sol";
-import "./LemaGovernance.sol";
+import "./governance/LemaGovernance.sol";
 
 // Master Contract of Lemmatron
-contract LemaChefV2 is Initializable, OwnableUpgradeable {
+contract LemaChefV2 is Initializable, OwnableUpgradeable, Pausable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using SafeERC20Upgradeable for LemaToken;
@@ -118,6 +119,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 _startBlock
     ) public initializer {
         __Ownable_init();
+        __PausableUpgradeable_init();
         lemaToken = _lemaToken;
         treasury = _treasury;
         // lemaPerBlock = _lemaPerBlock;
@@ -224,7 +226,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 _allocPoint,
         IERC20Upgradeable _lpToken,
         bool _withUpdate
-    ) external onlyOwner {
+    ) external onlyOwner whenNotPaused {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -250,7 +252,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 _pid,
         uint256 _allocPoint,
         bool _withUpdate
-    ) external onlyOwner {
+    ) external onlyOwner whenNotPaused {
         if (_withUpdate) {
             massUpdatePools();
         }
@@ -435,7 +437,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // Deposit LP tokens to LemaChef for Lema allocation.
-    function deposit(uint256 _pid, uint256 _amount) external {
+    function deposit(uint256 _pid, uint256 _amount) external whenNotPaused {
         require(_pid != 0, "deposit Lema by staking");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -489,7 +491,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // Withdraw LP tokens from LemaChef.
-    function withdraw(uint256 _pid, uint256 _amount) external {
+    function withdraw(uint256 _pid, uint256 _amount) external whenNotPaused {
         require(_pid != 0, "withdraw Lema by unstaking");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -519,7 +521,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) external {
+    function emergencyWithdraw(uint256 _pid) external whenNotPaused {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         uint256 amount = user.amount;
@@ -560,7 +562,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // Stake Lema tokens to LemaChef
-    function enterStaking(uint256 _amount) external {
+    function enterStaking(uint256 _amount) external whenNotPaused {
         PoolInfo storage pool = poolInfo[0];
         UserInfo storage user = userInfo[0][msg.sender];
         updatePool(0);
@@ -593,7 +595,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // Withdraw Lema tokens from STAKING.
-    function leaveStaking(uint256 _amount) external {
+    function leaveStaking(uint256 _amount) external whenNotPaused {
         PoolInfo storage pool = poolInfo[0];
         UserInfo storage user = userInfo[0][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -618,7 +620,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     }
 
     // function withdrawReward(uint256 _pid) external fridayOnly {
-    function withdrawReward(uint256 _pid) external {
+    function withdrawReward(uint256 _pid) external whenNotPaused {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount > 0, "withdraw: not good");
@@ -636,7 +638,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
         uint256 slashingParameter,
         address[] memory offlineValidators,
         address[] memory onlineValidators
-    ) public onlyLemaGovernance {
+    ) public onlyLemaGovernance whenNotPaused {
         require(
             msg.sender == address(lemaGovernance),
             "Only LemaGovernance can slash offline validators"
@@ -675,7 +677,7 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable {
     function evaluateThreeValidatorsNominatedByNominator(
         uint256 slashingParameter,
         address[] memory nominators
-    ) public onlyLemaGovernance {
+    ) public onlyLemaGovernance whenNotPaused {
         require(
             msg.sender == address(lemaGovernance),
             "Only LemaGovernance can evaluate three validators nominated by nominator"

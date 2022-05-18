@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./utils/Pausable.sol";
 
 import "./LemaToken.sol";
 
@@ -15,7 +16,7 @@ import "./LemaToken.sol";
  * amount of Lematron tokens within each time period.
  */
 
-contract LemaTokenVesting is Initializable, OwnableUpgradeable {
+contract LemaTokenVesting is Initializable, OwnableUpgradeable, Pausable {
     using SafeMathUpgradeable for uint256;
 
     LemaToken public lemaToken;
@@ -56,6 +57,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
         address _treasury
     ) public initializer {
         __Ownable_init();
+        __PausableUpgradeable_init();
         lemaToken = _lemaToken;
         initialLiquidity = _initialLiquidity;
         privateSale = _privateSale;
@@ -1018,7 +1020,7 @@ contract LemaTokenVesting is Initializable, OwnableUpgradeable {
     /**
      * @notice Transfers vested tokens to beneficiary.
      */
-    function release(address _vestingAddress) public {
+    function release(address _vestingAddress) public whenNotPaused {
         TokenGrant[] storage vestingGrants = grants[_vestingAddress];
 
         require(vestingGrants.length > 0, "Vesting Address not found !");
