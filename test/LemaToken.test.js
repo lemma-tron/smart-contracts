@@ -181,7 +181,7 @@ contract("LemaToken", function (accounts) {
   // });
 });
 
-contract("LemaToken: pausable", function (accounts) {
+contract.only("LemaToken: pausable", function (accounts) {
   it("should assert true", async () => {
     lemaTokenInstance = await LemaToken.deployed();
     return assert(
@@ -205,7 +205,10 @@ contract("LemaToken: pausable", function (accounts) {
       await lemaTokenInstance.transfer(accounts[1], 100);
       assert.fail("should have thrown before");
     } catch (error) {
-      return assert(error.message.includes("revert"), "Pausable: paused");
+      return assert(
+        error.message.includes("Pausable: paused"),
+        "Should throw when trying to transfer while paused"
+      );
     }
   });
 });
