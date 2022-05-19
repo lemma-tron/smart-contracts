@@ -55,10 +55,9 @@ module.exports = async function (deployer, network, accounts) {
   const lemaTokenInstance = await deployProxy(
     LemaToken,
     [
-      ownerAccount, // burner address
+      treasuryAccount, // burner address
       "0x0000000000000000000000000000000000000000", // temp treasuryHandler address
       "0x0000000000000000000000000000000000000000", // temp taxHandler address
-      "0x0000000000000000000000000000000000000000", // temp lemaTokenVesting address
     ],
     {
       deployer,
@@ -148,7 +147,7 @@ module.exports = async function (deployer, network, accounts) {
     lemaGovernanceInstance.address
   );
 
-  const lemaTokenVestingInstance = await deployProxy(
+  await deployProxy(
     LemaTokenVesting,
     [
       lemaTokenInstance.address, // _lemaToken
@@ -162,10 +161,6 @@ module.exports = async function (deployer, network, accounts) {
       treasuryAccount, // _treasury
     ],
     { deployer, initializer: "initialize" }
-  );
-
-  await lemaTokenInstance.updateLemaTokenVestingAddress(
-    lemaTokenVestingInstance.address
   );
 
   await presaleLemaRefundVaultInstance.transferOwnership(
