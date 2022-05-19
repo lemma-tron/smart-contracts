@@ -208,6 +208,5 @@ contract LemaToken is
         }
 
         treasuryHandler.afterTransferHandler(from, to, amount);
-        emit Transfer(from, to, taxedAmount);
     }
 }
