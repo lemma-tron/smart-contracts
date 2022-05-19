@@ -9,6 +9,7 @@ import "./utils/Pausable.sol";
 
 import "./tax/ITaxHandler.sol";
 import "./treasury/ITreasuryHandler.sol";
+import "./LemaTokenVesting.sol";
 
 /**
  * @title LemaToken
@@ -32,11 +33,17 @@ contract LemaToken is
     /// @notice The contract that performs tax-related operations.
     ITaxHandler public taxHandler;
 
-    /// @notice Emitted when the treasury handler contract is changed.
+    /// @notice The contract that performs token vesting-related operations.
+    LemaTokenVesting public lemaTokenVesting;
+
+    /// @notice Emitted when the treasury handler contract address is changed.
     event TreasuryHandlerChanged(address oldAddress, address newAddress);
 
-    /// @notice Emitted when the treasury handler contract is changed.
+    /// @notice Emitted when the tax handler contract address is changed.
     event TaxHandlerChanged(address oldAddress, address newAddress);
+
+    /// @notice Emitted when the lema token vesting contract address is changed.
+    event LemaTokenVestingChanged(address oldAddress, address newAddress);
 
     /**
      * @param _burnerAddress Address of the burner.
@@ -45,7 +52,8 @@ contract LemaToken is
     function initialize(
         address _burnerAddress,
         address _treasuryHandlerAddress,
-        address _taxHandlerAddress
+        address _taxHandlerAddress,
+        address _lemaTokenVestingAddress
     ) public initializer {
         __ERC20_init("Lema Token", "LEMA");
         __Ownable_init();
@@ -54,6 +62,7 @@ contract LemaToken is
         _cap = 1e28; //10 billion
         treasuryHandler = ITreasuryHandler(_treasuryHandlerAddress);
         taxHandler = ITaxHandler(_taxHandlerAddress);
+        lemaTokenVesting = LemaTokenVesting(_lemaTokenVestingAddress);
     }
 
     /**
@@ -76,7 +85,7 @@ contract LemaToken is
      * @dev Returns the address of the burner.
      */
     function burner() public view virtual returns (address) {
-        return burnerAddress;
+        return lemaTokenVesting.treasury();
     }
 
     /**
@@ -97,11 +106,6 @@ contract LemaToken is
             "Need LemaChef or Owner !"
         );
         _;
-    }
-
-    /// @notice Updates burner address. Must only be called by the burner.
-    function updateBurnerAddress(address _newBurnerAddress) public onlyBurner {
-        burnerAddress = _newBurnerAddress;
     }
 
     /// @notice Updates lemachef address. Must only be called by the owner.
@@ -135,18 +139,27 @@ contract LemaToken is
         emit TaxHandlerChanged(oldTaxHandlerAddress, _newTaxHandlerAddress);
     }
 
+    /// @notice Updates lema token vesting address. Must only be called by the owner.
+    function updateLemaTokenVestingAddress(address _newLemaTokenVestingAddress)
+        public
+        onlyOwner
+    {
+        address oldLemaTokenVestingAddress = address(lemaTokenVesting);
+        lemaTokenVesting = LemaTokenVesting(_newLemaTokenVestingAddress);
+        emit LemaTokenVestingChanged(
+            oldLemaTokenVestingAddress,
+            _newLemaTokenVestingAddress
+        );
+    }
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner.
     function mint(address _to, uint256 _amount) public onlyOwner whenNotPaused {
         require(totalSupply().add(_amount) <= cap(), "LemaToken: Cap exceeded");
         _mint(_to, _amount);
     }
 
-    function burn(address _from, uint256 _amount)
-        public
-        onlyBurner
-        whenNotPaused
-    {
-        _burn(_from, _amount);
+    function burn(uint256 _amount) public onlyBurner whenNotPaused {
+        _burn(msg.sender, _amount);
     }
 
     /**
