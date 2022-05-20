@@ -12,11 +12,12 @@ module.exports = async function (deployer, network, accounts) {
     process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
   const isDev = ["develop", "development"].includes(network);
   const isTestNet = ["testnet"].includes(network);
+
   let busdAddress;
   let routerAddress;
-  let busdInstance;
+
   if (isDev) {
-    busdInstance = await deployProxy(
+    let busdInstance = await deployProxy(
       MockBEP20,
       ["BUSD", "BUSD", "200000000000000000000000"],
       {
