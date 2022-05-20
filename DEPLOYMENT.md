@@ -39,3 +39,5 @@ After Implementation contract is verified, \
 ### UPDATE 2022-05-20
 
 Make sure you have added ADDRESS_FOR_STAKING_INCENTIVES_AND_DISCOUNT in your .env file as updated in .env.example file.
+
+- Removed because this address is of LemaChefV2

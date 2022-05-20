@@ -7,7 +7,7 @@ const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
 const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
 
 module.exports = async function (deployer, network, accounts) {
-  const ownerAccount = accounts[0];
+  const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
   const isDev = ["develop", "development"].includes(network);
   const isTestNet = ["testnet"].includes(network);
   let busdAddress;
@@ -29,7 +29,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const presaleLemaRefundVaultInstance = await deployProxy(
     PresaleLemaRefundVault,
-    [ownerAccount, busdAddress],
+    [treasuryAccount, busdAddress],
     {
       deployer,
       initializer: "initialize",
@@ -40,7 +40,6 @@ module.exports = async function (deployer, network, accounts) {
     [
       lemaTokenInstance.address,
       busdAddress,
-      ownerAccount,
       presaleLemaRefundVaultInstance.address,
     ],
     { deployer, initializer: "initialize" }

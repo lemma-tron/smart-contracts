@@ -4,7 +4,6 @@ const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const LemaToken = artifacts.require("LemaToken");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
-const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 
 module.exports = async function (deployer, network, accounts) {
   const treasuryCollectionAccount =
@@ -14,7 +13,6 @@ module.exports = async function (deployer, network, accounts) {
     : [...accounts.slice(0, 8)];
 
   const lemaTokenInstance = await LemaToken.deployed();
-  const lemaTokenVestingInstance = await LemaTokenVesting.deployed();
 
   const lemaChefInstance = await deployProxy(
     LemaChefV2,
@@ -24,9 +22,6 @@ module.exports = async function (deployer, network, accounts) {
       0, // _startBlock
     ],
     { deployer, initializer: "initialize" }
-  );
-  await lemaTokenVestingInstance.updateStakingIncentiveDiscountAddress(
-    lemaChefInstance.address
   );
 
   let today = new Date();
@@ -45,6 +40,7 @@ module.exports = async function (deployer, network, accounts) {
     ],
     { deployer, initializer: "initialize" }
   );
+
   await lemaChefInstance.updateLemaGovernanceAddress(
     lemaGovernanceInstance.address
   );

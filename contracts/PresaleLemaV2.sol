@@ -33,9 +33,6 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
     // Set token claimable or not
     bool public tokenClaimable;
 
-    // The wallet that holds the BUSD raised on the presale
-    address public wallet;
-
     // The amount of BUSD raised
     uint256 public busdRaised;
 
@@ -94,14 +91,12 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
     function initialize(
         LemaToken _lemaToken,
         IERC20Upgradeable _busd,
-        address _wallet,
         PresaleLemaRefundVault _vault
     ) public initializer {
         __Ownable_init();
         __PausableUpgradeable_init();
         lemaToken = _lemaToken;
         busd = _busd;
-        wallet = _wallet;
         vault = _vault;
         startTime = 1653436800; // May 25th 2022, 12 am (UTC)
         endTime = 1653868800; // May 30th 2022, 12 am (UTC)
@@ -278,7 +273,6 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
 
     /// @notice Update Wallet Address that claims collected BUSD
     function updateWalletAddress(address _wallet) public onlyOwner {
-        wallet = _wallet;
         vault.updateWalletAddress(_wallet);
     }
 

@@ -5,21 +5,8 @@ const MockBEP20 = artifacts.require("MockBEP20");
 const LemaToken = artifacts.require("LemaToken");
 const TaxHandler = artifacts.require("LemaTaxHandler");
 const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
-const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 
 module.exports = async function (deployer, network, accounts) {
-  const ownerAccount = accounts[0];
-  const addressForInitialLiquidity =
-    process.env.ADDRESS_FOR_INITIAL_LIQUIDITY || ownerAccount;
-  const addressForPrivateSale =
-    process.env.ADDRESS_FOR_PRIVATE_SALE || accounts[1];
-  const addressForPublicSale =
-    process.env.ADDRESS_FOR_PUBLIC_SALE || accounts[2];
-  const addressForMarketing = process.env.ADDRESS_FOR_MARKETING || accounts[3];
-  const addressForStakingIncentivesAndDiscount =
-    process.env.ADDRESS_FOR_STAKING_INCENTIVES_AND_DISCOUNT || accounts[8];
-  const addressForAdvisor = process.env.ADDRESS_FOR_ADVISOR || accounts[4];
-  const addressForTeam = process.env.ADDRESS_FOR_TEAM || accounts[5];
   const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
   const treasuryCollectionAccount =
     process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
@@ -89,28 +76,4 @@ module.exports = async function (deployer, network, accounts) {
     }
   );
   await lemaTokenInstance.updateTaxHandlerAddress(taxHandlerInstance.address);
-
-  const lemaTokenVestingInstance = await deployProxy(
-    LemaTokenVesting,
-    [
-      lemaTokenInstance.address, // _lemaToken
-      addressForInitialLiquidity, // _initialLiquidity
-      addressForPrivateSale, // _privateSale
-      addressForPublicSale, // _publicSale
-      addressForMarketing, // _marketing
-      addressForStakingIncentivesAndDiscount, // _stakingIncentiveDiscount
-      addressForAdvisor, // _advisor
-      addressForTeam, // _team
-      treasuryAccount, // _treasury
-    ],
-    { deployer, initializer: "initialize" }
-  );
-
-  if (!isDev) {
-    const totalSupply = await lemaTokenInstance.cap();
-    await lemaTokenInstance.mint(
-      lemaTokenVestingInstance.address,
-      totalSupply.toString()
-    );
-  }
 };
