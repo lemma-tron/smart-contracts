@@ -3,13 +3,9 @@ const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
 const MockBEP20 = artifacts.require("MockBEP20");
 const LemaToken = artifacts.require("LemaToken");
-const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
-const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
-const LemaChefV2 = artifacts.require("LemaChefV2");
-const LemaGovernance = artifacts.require("LemaGovernance");
-const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const TaxHandler = artifacts.require("LemaTaxHandler");
 const TreasuryHandlerAlpha = artifacts.require("TreasuryHandlerAlpha");
+const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 
 module.exports = async function (deployer, network, accounts) {
   const ownerAccount = accounts[0];
@@ -20,14 +16,13 @@ module.exports = async function (deployer, network, accounts) {
   const addressForPublicSale =
     process.env.ADDRESS_FOR_PUBLIC_SALE || accounts[2];
   const addressForMarketing = process.env.ADDRESS_FOR_MARKETING || accounts[3];
+  const addressForStakingIncentivesAndDiscount =
+    process.env.ADDRESS_FOR_STAKING_INCENTIVES_AND_DISCOUNT || accounts[8];
   const addressForAdvisor = process.env.ADDRESS_FOR_ADVISOR || accounts[4];
   const addressForTeam = process.env.ADDRESS_FOR_TEAM || accounts[5];
   const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
   const treasuryCollectionAccount =
     process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
-  const whitelistedAddressesList = process.env.WHITELISTED_ADDRESSES
-    ? JSON.parse(process.env.WHITELISTED_ADDRESSES)
-    : [...accounts.slice(0, 8)];
   const isDev = ["develop", "development"].includes(network);
   const isTestNet = ["testnet"].includes(network);
   let busdAddress;
@@ -78,6 +73,9 @@ module.exports = async function (deployer, network, accounts) {
       initializer: "initialize",
     }
   );
+  await lemaTokenInstance.updateTreasuryHandlerAddress(
+    treasuryHandlerAlphaInstance.address
+  );
 
   const taxHandlerInstance = await deployProxy(
     TaxHandler,
@@ -90,64 +88,9 @@ module.exports = async function (deployer, network, accounts) {
       initializer: "initialize",
     }
   );
-
-  await lemaTokenInstance.updateTreasuryHandlerAddress(
-    treasuryHandlerAlphaInstance.address
-  );
-
   await lemaTokenInstance.updateTaxHandlerAddress(taxHandlerInstance.address);
 
-  const presaleLemaRefundVaultInstance = await deployProxy(
-    PresaleLemaRefundVault,
-    [ownerAccount, busdAddress],
-    {
-      deployer,
-      initializer: "initialize",
-    }
-  );
-  const presaleLemaInstance = await deployProxy(
-    PresaleLemaV2,
-    [
-      lemaTokenInstance.address,
-      busdAddress,
-      ownerAccount,
-      presaleLemaRefundVaultInstance.address,
-    ],
-    { deployer, initializer: "initialize" }
-  );
-
-  const lemaChefInstance = await deployProxy(
-    LemaChefV2,
-    [
-      lemaTokenInstance.address, // _lemaToken
-      treasuryCollectionAccount, // _treasury
-      0, // _startBlock
-    ],
-    { deployer, initializer: "initialize" }
-  );
-
-  let today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-
-  const startDate = today / 1000;
-  const endDate = today.setDate(today.getDate() + 90) / 1000;
-
-  const lemaGovernanceInstance = await deployProxy(
-    LemaGovernance,
-    [
-      startDate, // _governanceVotingStart
-      endDate, // _governanceVotingEnd
-      lemaChefInstance.address, // LemaChef address
-      whitelistedAddressesList, // _whitelistedAddresses
-    ],
-    { deployer, initializer: "initialize" }
-  );
-
-  await lemaChefInstance.updateLemaGovernanceAddress(
-    lemaGovernanceInstance.address
-  );
-
-  await deployProxy(
+  const lemaTokenVestingInstance = await deployProxy(
     LemaTokenVesting,
     [
       lemaTokenInstance.address, // _lemaToken
@@ -155,7 +98,7 @@ module.exports = async function (deployer, network, accounts) {
       addressForPrivateSale, // _privateSale
       addressForPublicSale, // _publicSale
       addressForMarketing, // _marketing
-      lemaChefInstance.address, // _stakingIncentiveDiscount
+      addressForStakingIncentivesAndDiscount, // _stakingIncentiveDiscount
       addressForAdvisor, // _advisor
       addressForTeam, // _team
       treasuryAccount, // _treasury
@@ -163,13 +106,11 @@ module.exports = async function (deployer, network, accounts) {
     { deployer, initializer: "initialize" }
   );
 
-  await presaleLemaRefundVaultInstance.transferOwnership(
-    presaleLemaInstance.address
-  );
-
-  isDev &&
-    (await busdInstance.approve(
-      presaleLemaRefundVaultInstance.address,
-      "1000000000000000000000000"
-    ));
+  if (!isDev) {
+    const totalSupply = await lemaTokenInstance.cap();
+    await lemaTokenInstance.mint(
+      lemaTokenVestingInstance.address,
+      totalSupply.toString()
+    );
+  }
 };
