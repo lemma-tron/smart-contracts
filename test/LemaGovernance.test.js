@@ -8,7 +8,32 @@ let lemaGovernanceInstance;
 let lemaTokenInstance;
 let lemaStakingInstance;
 
-contract("LemaGovernance", function (accounts) {
+const projectName = "Bitcoin";
+const projectDescription = "Bitcoin description";
+const tokenSymbol = "BTC";
+const tokenContract = "0x0000000000000000000000000000000000000000";
+const preferredDEXPlatform = "Blockchain";
+const totalLiquidity = 100;
+const projectWebsite = "https://bitcoin.org";
+const twitterLink = "https://twitter.com/bitcoin";
+const telegramLink = "https://t.me/bitcoin";
+const discordLink = "https://discord.gg/bitcoin";
+const mediumLink = "https://medium.com/@bitcoin";
+const projectDetails = [
+  projectName,
+  projectDescription,
+  tokenSymbol,
+  tokenContract,
+  preferredDEXPlatform,
+  totalLiquidity,
+  projectWebsite,
+  twitterLink,
+  telegramLink,
+  discordLink,
+  mediumLink,
+];
+
+contract.only("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
     lemaStakingInstance = await LemaChefV2.deployed();
@@ -37,57 +62,26 @@ contract("LemaGovernance", function (accounts) {
     return assert(projects.length === 0, "There should not be any project");
   });
 
-  it("should accept new projects", async () => {
-    const projectName = "Bitcoin";
-    const projectDescription = "Bitcoin description";
-    const tokenSymbol = "BTC";
-    const tokenContract = "0x0000000000000000000000000000000000000000";
-    const preferredDEXPlatform = "Blockchain";
-    const totalLiquidity = 100;
-    const projectWebsite = "https://bitcoin.org";
-    const twitterLink = "https://twitter.com/bitcoin";
-    const telegramLink = "https://t.me/bitcoin";
-    const discordLink = "https://discord.gg/bitcoin";
-    const mediumLink = "https://medium.com/@bitcoin";
+  it("should not accept new projects from other than owner", async () => {
+    try {
+      await lemaGovernanceInstance.addProject(...projectDetails, {
+        from: accounts[1],
+      });
+    } catch (error) {
+      return assert.equal(error.reason, "Ownable: caller is not the owner");
+    }
+  });
 
-    await lemaGovernanceInstance.addProject(
-      projectName,
-      projectDescription,
-      tokenSymbol,
-      tokenContract,
-      preferredDEXPlatform,
-      totalLiquidity,
-      projectWebsite,
-      twitterLink,
-      telegramLink,
-      discordLink,
-      mediumLink,
-      { from: accounts[1] }
-    );
+  it("should accept new projects", async () => {
+    await lemaGovernanceInstance.addProject(...projectDetails, {
+      from: accounts[0],
+    });
 
     const projects = await lemaGovernanceInstance.getProjects();
     assert.equal(projects.length, 1);
 
     const project = projects[0];
     assert.equal(project.name, projectName);
-    assert.equal(project.approved, false);
-  });
-
-  it("should not let other than owner to approve projects", async () => {
-    try {
-      await lemaGovernanceInstance.approveProject(0, { from: accounts[1] });
-      assert(false, "should have thrown");
-    } catch (error) {
-      assert.equal(error.reason, "Ownable: caller is not the owner");
-    }
-  });
-
-  it("should let owner to approve projects", async () => {
-    await lemaGovernanceInstance.approveProject(0, { from: accounts[0] });
-
-    const projects = await lemaGovernanceInstance.getProjects();
-    const approvedProject = projects[0];
-    assert.equal(approvedProject.approved, true);
   });
 
   it("should not have any voters or validators", async () => {

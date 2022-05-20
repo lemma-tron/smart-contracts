@@ -33,7 +33,6 @@ contract LemaGovernance is
         string telegramLink;
         string discordLink;
         string mediumLink;
-        bool approved;
         address[] validatorVoters;
     }
 
@@ -177,7 +176,7 @@ contract LemaGovernance is
         string memory _telegramLink,
         string memory _discordLink,
         string memory _mediumLink
-    ) external runningGovernanceOnly whenNotPaused {
+    ) external runningGovernanceOnly whenNotPaused onlyOwner {
         uint256 index = currentGovernance.projects.length;
         currentGovernance.projects.push();
         Project storage project = currentGovernance.projects[index];
@@ -192,20 +191,6 @@ contract LemaGovernance is
         project.telegramLink = _telegramLink;
         project.discordLink = _discordLink;
         project.mediumLink = _mediumLink;
-    }
-
-    function approveProject(uint256 index)
-        external
-        runningGovernanceOnly
-        onlyOwner
-        whenNotPaused
-    {
-        require(
-            index < currentGovernance.projects.length,
-            "Project index out of bounds"
-        );
-        Project storage project = currentGovernance.projects[index];
-        project.approved = true;
     }
 
     function delegateValidator(address validator)
@@ -257,10 +242,6 @@ contract LemaGovernance is
             "LemaGovernance: Project index out of bounds"
         );
         Project storage project = currentGovernance.projects[index];
-        require(
-            project.approved,
-            "LemaGovernance: Project is not approved yet"
-        );
         project.validatorVoters.push(msg.sender);
         updateCastedVote(true);
     }
