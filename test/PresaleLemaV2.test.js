@@ -11,8 +11,8 @@ let currentTimestamp;
 
 contract("PresaleLemaV2", function (accounts) {
   before("Deploy Contracts", async () => {
-    // May 15th 2022, 12 am (UTC)
-    currentTimestamp = 1652572800;
+    // May 25th 2022, 12 am (UTC)
+    currentTimestamp = 1653436800;
 
     lemaTokenInstance = await LemaToken.deployed();
     busdInstance = await MockBEP20.deployed();

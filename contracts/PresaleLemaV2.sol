@@ -6,11 +6,12 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./utils/Pausable.sol";
 
 import "./PresaleLemaRefundVault.sol";
 import "./LemaToken.sol";
 
-contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
+contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -31,9 +32,6 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
 
     // Set token claimable or not
     bool public tokenClaimable;
-
-    // The wallet that holds the BUSD raised on the presale
-    address public wallet;
 
     // The amount of BUSD raised
     uint256 public busdRaised;
@@ -93,16 +91,15 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     function initialize(
         LemaToken _lemaToken,
         IERC20Upgradeable _busd,
-        address _wallet,
         PresaleLemaRefundVault _vault
     ) public initializer {
         __Ownable_init();
+        __PausableUpgradeable_init();
         lemaToken = _lemaToken;
         busd = _busd;
-        wallet = _wallet;
         vault = _vault;
-        startTime = 1652572800; // May 15th 2022, 12 am (UTC)
-        endTime = 1653523200; // May 26th 2022, 12 am (UTC)
+        startTime = 1653436800; // May 25th 2022, 12 am (UTC)
+        endTime = 1653868800; // May 30th 2022, 12 am (UTC)
         startingPrice = 0.00005 ether;
         closingPrice = 0.0010 ether;
         tokenClaimable = false;
@@ -127,7 +124,11 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         );
     }
 
-    function buyTokensWithBUSD(uint256 _amount) public runningPreSaleOnly {
+    function buyTokensWithBUSD(uint256 _amount)
+        public
+        runningPreSaleOnly
+        whenNotPaused
+    {
         require(_amount > 0, "Amount should be greater than 0");
         require(_amount <= busd.balanceOf(msg.sender), "BUSD is not enough");
 
@@ -187,7 +188,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     }
 
     /// @notice If presale is unsuccessful, owner can enable refund.
-    function enableRefund() public onlyOwner {
+    function enableRefund() public onlyOwner whenNotPaused {
         require(hasEnded(), "Presale has not ended");
         require(!isRefunding, "Required action has been taken.");
 
@@ -197,7 +198,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
     }
 
     /// @notice If refund is enabled, investors can claim refunds here
-    function claimRefund() public {
+    function claimRefund() public whenNotPaused {
         require(hasEnded() && isRefunding, "Refund not available");
         require(presaleBalances[msg.sender] > 0, "No amount to be refunded");
 
@@ -234,7 +235,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         tokenClaimable = _claimable;
     }
 
-    function claimLemaToken() public {
+    function claimLemaToken() public whenNotPaused {
         require(hasEnded(), "Presale not ended");
         require(!isRefunding, "Cannot claim token in Refunding state");
         require(
@@ -272,7 +273,6 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
 
     /// @notice Update Wallet Address that claims collected BUSD
     function updateWalletAddress(address _wallet) public onlyOwner {
-        wallet = _wallet;
         vault.updateWalletAddress(_wallet);
     }
 
@@ -281,7 +281,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable {
         address tokenAddress,
         address spender,
         uint256 amount
-    ) public onlyOwner returns (bool) {
+    ) public onlyOwner whenNotPaused returns (bool) {
         return vault.approve(tokenAddress, spender, amount);
     }
 }

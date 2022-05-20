@@ -13,6 +13,10 @@ contract("LemaStaking", function (accounts) {
   before(async () => {
     let snapshot = await timeMachine.takeSnapshot();
     snapshotId = snapshot["result"];
+
+    // Sets timestamp as hardcoded inside contract
+    // Thursday, June 16, 2022 12:00:00 AM (GMT)
+    await timeMachine.advanceBlockAndSetTime(1655337600);
   });
   after(async () => {
     await timeMachine.revertToSnapshot(snapshotId);
@@ -27,10 +31,6 @@ contract("LemaStaking", function (accounts) {
 
     const totalSupply = await lemaToken.cap();
     await lemaToken.mint(lemaTokenVesting.address, totalSupply.toString());
-
-    // Sets timestamp as hardcoded inside contract
-    // Thursday, June 16, 2022 12:00:00 AM (GMT)
-    await timeMachine.advanceBlockAndSetTime(1655337600);
 
     return assert(
       lemaStakingInstance !== undefined,

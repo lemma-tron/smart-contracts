@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../utils/Pausable.sol";
 
-import "./LemaChefV2.sol";
+import "../LemaChefV2.sol";
 import "./LemaValidators.sol";
 import "./LemaVoters.sol";
 
@@ -13,6 +14,7 @@ import "./LemaVoters.sol";
 contract LemaGovernance is
     Initializable,
     OwnableUpgradeable,
+    Pausable,
     LemaValidators,
     LemaVoters
 {
@@ -79,6 +81,7 @@ contract LemaGovernance is
         address[] memory _whitelisted
     ) public initializer {
         __Ownable_init();
+        __PausableUpgradeable_init();
         __LemaValidators_init(_whitelisted);
         currentGovernance.governanceVotingStart = _governanceVotingStart;
         currentGovernance.governanceVotingEnd = _governanceVotingEnd;
@@ -128,7 +131,7 @@ contract LemaGovernance is
         address nominator,
         address previousValidator,
         address newValidator
-    ) public onlyLemaChef {
+    ) public onlyLemaChef whenNotPaused {
         _vestVotesToDifferentValidator(
             nominator,
             previousValidator,
@@ -142,7 +145,7 @@ contract LemaGovernance is
         evaluateThreeValidatorsNominatedByNominator();
     }
 
-    function startNewGovernance() external onlyOwner {
+    function startNewGovernance() external onlyOwner whenNotPaused {
         applySlashing();
         currentGovernance.validators = getValidators();
         currentGovernance.voters = getVoters();
@@ -174,7 +177,7 @@ contract LemaGovernance is
         string memory _telegramLink,
         string memory _discordLink,
         string memory _mediumLink
-    ) external runningGovernanceOnly {
+    ) external runningGovernanceOnly whenNotPaused {
         uint256 index = currentGovernance.projects.length;
         currentGovernance.projects.push();
         Project storage project = currentGovernance.projects[index];
@@ -195,6 +198,7 @@ contract LemaGovernance is
         external
         runningGovernanceOnly
         onlyOwner
+        whenNotPaused
     {
         require(
             index < currentGovernance.projects.length,
@@ -208,6 +212,7 @@ contract LemaGovernance is
         public
         override
         runningGovernanceOnly
+        whenNotPaused
     {
         require(
             getValidatorsExists(validator),
@@ -220,7 +225,7 @@ contract LemaGovernance is
         LemaValidators.vestVotes(validator, votingPower);
     }
 
-    function applyForValidator() public virtual override {
+    function applyForValidator() public virtual override whenNotPaused {
         if (haveDelagatedValidator(msg.sender)) {
             withdrawVotes(getValidatorsNominatedByNominator(msg.sender)[0]); // using 0 index as votes were accumulated with the first validator among the three returned ones
 
@@ -234,7 +239,11 @@ contract LemaGovernance is
         );
     }
 
-    function castVote(uint256 index) external validValidatorsOnly {
+    function castVote(uint256 index)
+        external
+        validValidatorsOnly
+        whenNotPaused
+    {
         require(
             getValidatorsExists(msg.sender),
             "LemaGovernance: Only validators can cast a vote"
@@ -256,7 +265,12 @@ contract LemaGovernance is
         updateCastedVote(true);
     }
 
-    function rewardMostVotedProject() external onlyOwner runningGovernanceOnly {
+    function rewardMostVotedProject()
+        external
+        onlyOwner
+        runningGovernanceOnly
+        whenNotPaused
+    {
         uint256 mostVotes = 0;
         uint256 mostVotedIndex = 0;
         for (
@@ -274,7 +288,11 @@ contract LemaGovernance is
         currentGovernance.winningVoteCount = mostVotes;
     }
 
-    function leftStakingAsValidator(address _validator) external onlyLemaChef {
+    function leftStakingAsValidator(address _validator)
+        external
+        onlyLemaChef
+        whenNotPaused
+    {
         removeFromValidator(_validator);
     }
 }

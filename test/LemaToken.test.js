@@ -180,3 +180,35 @@ contract("LemaToken", function (accounts) {
   //   assert.equal(finalReceiverBalance, 19700);
   // });
 });
+
+contract("LemaToken: pausable", function (accounts) {
+  it("should assert true", async () => {
+    lemaTokenInstance = await LemaToken.deployed();
+    return assert(
+      lemaTokenInstance !== undefined,
+      "LemaToken contract should be defined"
+    );
+  });
+
+  it("should be able to pause and unpause", async () => {
+    await lemaTokenInstance.pause({ from: accounts[0] });
+    assert.equal(await lemaTokenInstance.paused(), true);
+
+    await lemaTokenInstance.unpause({ from: accounts[0] });
+    assert.equal(await lemaTokenInstance.paused(), false);
+  });
+
+  it("should not be able to transfer tokens while paused", async () => {
+    await lemaTokenInstance.pause({ from: accounts[0] });
+
+    try {
+      await lemaTokenInstance.transfer(accounts[1], 100);
+      assert.fail("should have thrown before");
+    } catch (error) {
+      return assert(
+        error.message.includes("Pausable: paused"),
+        "Should throw when trying to transfer while paused"
+      );
+    }
+  });
+});

@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./utils/Pausable.sol";
 
 /**
  * @title PresaleLemaRefundVault
@@ -13,7 +14,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
  * is in progress. Supports refunding the money if presale fails,
  * and forwarding it if presale is successful.
  */
-contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
+contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable, Pausable {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -41,6 +42,7 @@ contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
         initializer
     {
         __Ownable_init();
+        __PausableUpgradeable_init();
         wallet = _wallet;
         busd = _busd;
         state = State.Active;
@@ -51,40 +53,44 @@ contract PresaleLemaRefundVault is Initializable, OwnableUpgradeable {
         address tokenAddress,
         address spender,
         uint256 amount
-    ) public onlyOwner returns (bool) {
+    ) public onlyOwner whenNotPaused returns (bool) {
         IERC20Upgradeable(tokenAddress).approve(spender, amount);
         return true;
     }
 
-    function deposit(address _investor, uint256 _amount) public onlyOwner {
+    function deposit(address _investor, uint256 _amount)
+        public
+        onlyOwner
+        whenNotPaused
+    {
         require(state == State.Active, "Requires Active state");
         deposited[_investor] = deposited[_investor].add(_amount);
         totalBUSDDeposited = totalBUSDDeposited.add(_amount);
         busd.safeTransferFrom(_investor, address(this), _amount);
     }
 
-    function tokenClaimed(address investor) public onlyOwner {
+    function tokenClaimed(address investor) public onlyOwner whenNotPaused {
         tokenClaimedTracker[investor] = true;
     }
 
-    function close() public onlyOwner {
+    function close() public onlyOwner whenNotPaused {
         require(state == State.Active, "Requires Active state");
         state = State.Closed;
         emit Closed();
     }
 
-    function enableRefunds() public onlyOwner {
+    function enableRefunds() public onlyOwner whenNotPaused {
         require(state == State.Closed, "Requires Closed state");
         state = State.Refunding;
         emit RefundsEnabled();
     }
 
-    function withdrawBUSD() public onlyOwner {
+    function withdrawBUSD() public onlyOwner whenNotPaused {
         require(state == State.Closed, "Requires Closed state");
         busd.safeTransfer(wallet, totalBUSDDeposited);
     }
 
-    function refund(address investor) public onlyOwner {
+    function refund(address investor) public onlyOwner whenNotPaused {
         require(state == State.Refunding, "Requires Refunding state");
         require(
             tokenClaimedTracker[investor] == false,
