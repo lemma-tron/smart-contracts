@@ -100,7 +100,7 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
         vault = _vault;
         startTime = 1653436800; // May 25th 2022, 12 am (UTC)
         endTime = 1653868800; // May 30th 2022, 12 am (UTC)
-        startingPrice = 0.00005 ether;
+        startingPrice = 0.0005 ether;
         closingPrice = 0.0010 ether;
         tokenClaimable = false;
         busdRaised = 0;
@@ -111,9 +111,15 @@ contract PresaleLemaV2 is Initializable, OwnableUpgradeable, Pausable {
     }
 
     function getPrice() public view returns (uint256) {
-        uint256 daysPassed = ((block.timestamp.sub(startTime)).mul(1e20)).div(
+        // if presale has not yet started
+        if (block.timestamp < startTime) {
+            return startingPrice;
+        }
+
+        uint256 daysPassed = (block.timestamp.sub(startTime)).mul(1e20).div(
             1 days
         );
+
         uint256 duration = ((endTime.sub(startTime)).mul(1e20)).div(1 days);
         return (
             startingPrice.add(

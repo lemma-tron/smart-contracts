@@ -122,7 +122,7 @@ contract("PresaleLemaV2", function (accounts) {
 
       assert.equal(
         (await presaleInstance.getPrice()).toString(),
-        "239999999999999"
+        "599999999999999"
       );
 
       await busdInstance.approve(
@@ -159,7 +159,7 @@ contract("PresaleLemaV2", function (accounts) {
 
       assert.equal(
         (await presaleInstance.getPrice()).toString(),
-        "239999999999999"
+        "599999999999999"
       );
 
       await busdInstance.approve(
