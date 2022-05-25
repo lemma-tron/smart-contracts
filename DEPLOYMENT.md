@@ -9,10 +9,10 @@ To deploy for the first phase on BSC mainnet, run: \
 `truffle migrate --network bsc --to 6`
 
 To deploy for the second phase on BSC testnet, run: \
-`truffle migrate --network testnet --f 7`
+`truffle migrate --network testnet -f 7`
 
 To deploy for the second phase on BSC mainnet, run: \
-`truffle migrate --network bsc --f 7`
+`truffle migrate --network bsc -f 7`
 
 This will deploy Proxy Contracts and Implementation Contracts.
 Proxy Contracts are automatically verified. We will have to verify Implementation contracts.
