@@ -153,6 +153,7 @@ contract LemaToken is
      */
     function transfer(address recipient, uint256 amount)
         public
+        virtual
         override
         whenNotPaused
         returns (bool)
@@ -181,8 +182,8 @@ contract LemaToken is
         address from,
         address to,
         uint256 amount
-    ) public override whenNotPaused returns (bool) {
-        super._spendAllowance(from, _msgSender(), amount);
+    ) public virtual override whenNotPaused returns (bool) {
+        _spendAllowance(from, _msgSender(), amount);
         _transfer(from, to, amount);
         return true;
     }
@@ -191,7 +192,7 @@ contract LemaToken is
         address from,
         address to,
         uint256 amount
-    ) internal override whenNotPaused {
+    ) internal virtual override whenNotPaused {
         treasuryHandler.beforeTransferHandler(from, to, amount);
 
         uint256 tax = taxHandler.getTax(from, to, amount);

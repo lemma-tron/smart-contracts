@@ -1,28 +1,15 @@
 require("dotenv").config();
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
-const LemaToken = artifacts.require("LemaToken");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaGovernance = artifacts.require("LemaGovernance");
 
 module.exports = async function (deployer, network, accounts) {
-  const treasuryCollectionAccount =
-    process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
   const whitelistedAddressesList = process.env.WHITELISTED_ADDRESSES
     ? JSON.parse(process.env.WHITELISTED_ADDRESSES)
     : [...accounts.slice(0, 8)];
 
-  const lemaTokenInstance = await LemaToken.deployed();
-
-  const lemaChefInstance = await deployProxy(
-    LemaChefV2,
-    [
-      lemaTokenInstance.address, // _lemaToken
-      treasuryCollectionAccount, // _treasury
-      0, // _startBlock
-    ],
-    { deployer, initializer: "initialize" }
-  );
+  const lemaChefInstance = await LemaChefV2.deployed();
 
   let today = new Date();
   today.setUTCHours(0, 0, 0, 0);

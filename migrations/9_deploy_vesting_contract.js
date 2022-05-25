@@ -16,11 +16,11 @@ module.exports = async function (deployer, network, accounts) {
   const addressForTeam = process.env.ADDRESS_FOR_TEAM || accounts[5];
   const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
 
-  const isDev = ["develop", "development"].includes(network);
+  // const isDev = ["develop", "development"].includes(network);
 
   const lemaTokenInstance = await LemaToken.deployed();
   const lemaPresaleInstance = await PresaleLemaV2.deployed();
-  const lemaChefInstance = await LemaChefV2.deployed();
+  // const lemaChefInstance = await LemaChefV2.deployed();
 
   const lemaTokenVestingInstance = await deployProxy(
     LemaTokenVesting,
@@ -30,7 +30,7 @@ module.exports = async function (deployer, network, accounts) {
       lemaPresaleInstance.address, // _privateSale
       addressForPublicSale, // _publicSale
       addressForMarketing, // _marketing
-      lemaChefInstance.address, // _stakingIncentiveDiscount
+      "0x0000000000000000000000000000000000000000", // _stakingIncentiveDiscount: replace with lemaChefInstance.address
       addressForAdvisor, // _advisor
       addressForTeam, // _team
       treasuryAccount, // _treasury
@@ -38,11 +38,11 @@ module.exports = async function (deployer, network, accounts) {
     { deployer, initializer: "initialize" }
   );
 
-  if (!isDev) {
-    const totalSupply = await lemaTokenInstance.cap();
-    await lemaTokenInstance.mint(
-      lemaTokenVestingInstance.address,
-      totalSupply.toString()
-    );
-  }
+  // if (!isDev) {
+  //   const totalSupply = await lemaTokenInstance.cap();
+  //   await lemaTokenInstance.mint(
+  //     lemaTokenVestingInstance.address,
+  //     totalSupply.toString()
+  //   );
+  // }
 };

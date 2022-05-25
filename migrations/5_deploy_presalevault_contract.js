@@ -2,9 +2,7 @@ require("dotenv").config();
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
 const MockBEP20 = artifacts.require("MockBEP20");
-const LemaToken = artifacts.require("LemaToken");
 const PresaleLemaRefundVault = artifacts.require("PresaleLemaRefundVault");
-const PresaleLemaV2 = artifacts.require("PresaleLemaV2");
 
 module.exports = async function (deployer, network, accounts) {
   const treasuryAccount = process.env.ADDRESS_FOR_TREASURY || accounts[6];
@@ -22,27 +20,8 @@ module.exports = async function (deployer, network, accounts) {
     busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"; // https://bscscan.com/address/0xe9e7cea3dedca5984780bafc599bd69add087d56
   }
 
-  const lemaTokenInstance = await LemaToken.deployed();
-
-  const presaleLemaRefundVaultInstance = await deployProxy(
-    PresaleLemaRefundVault,
-    [treasuryAccount, busdAddress],
-    {
-      deployer,
-      initializer: "initialize",
-    }
-  );
-  const presaleLemaInstance = await deployProxy(
-    PresaleLemaV2,
-    [
-      lemaTokenInstance.address,
-      busdAddress,
-      presaleLemaRefundVaultInstance.address,
-    ],
-    { deployer, initializer: "initialize" }
-  );
-
-  await presaleLemaRefundVaultInstance.transferOwnership(
-    presaleLemaInstance.address
-  );
+  await deployProxy(PresaleLemaRefundVault, [treasuryAccount, busdAddress], {
+    deployer,
+    initializer: "initialize",
+  });
 };
