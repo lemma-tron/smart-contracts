@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./utils/Pausable.sol";
-import "./utils/ERC20Snapshot.sol";
 
 import "./tax/ITaxHandler.sol";
 import "./treasury/ITreasuryHandler.sol";
@@ -19,8 +18,7 @@ contract LemaToken is
     Initializable,
     ERC20Upgradeable,
     OwnableUpgradeable,
-    Pausable,
-    ERC20Snapshot
+    Pausable
 {
     using SafeMathUpgradeable for uint256;
 
@@ -155,6 +153,7 @@ contract LemaToken is
      */
     function transfer(address recipient, uint256 amount)
         public
+        virtual
         override
         whenNotPaused
         returns (bool)
@@ -183,26 +182,17 @@ contract LemaToken is
         address from,
         address to,
         uint256 amount
-    ) public override whenNotPaused returns (bool) {
-        super._spendAllowance(from, _msgSender(), amount);
+    ) public virtual override whenNotPaused returns (bool) {
+        _spendAllowance(from, _msgSender(), amount);
         _transfer(from, to, amount);
         return true;
-    }
-
-    function _beforeTokenTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal override(ERC20Upgradeable, ERC20SnapshotUpgradeable) {
-        ERC20SnapshotUpgradeable._beforeTokenTransfer(_from, _to, _amount);
-        ERC20Upgradeable._beforeTokenTransfer(_from, _to, _amount);
     }
 
     function _transfer(
         address from,
         address to,
         uint256 amount
-    ) internal override whenNotPaused {
+    ) internal virtual override whenNotPaused {
         treasuryHandler.beforeTransferHandler(from, to, amount);
 
         uint256 tax = taxHandler.getTax(from, to, amount);
