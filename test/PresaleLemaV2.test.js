@@ -9,7 +9,7 @@ const MockBEP20 = artifacts.require("mock/MockBEP20");
 let lemaTokenInstance, presaleInstance, presaleVaultInstance, busdInstance;
 let currentTimestamp;
 
-contract("PresaleLemaV2", function (accounts) {
+contract.skip("PresaleLemaV2", function (accounts) {
   before("Deploy Contracts", async () => {
     // May 25th 2022, 12 am (UTC)
     currentTimestamp = 1653436800;
