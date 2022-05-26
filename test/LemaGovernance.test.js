@@ -388,4 +388,18 @@ contract("LemaGovernance: Validator", function (accounts) {
     const validators = await lemaGovernanceInstance.getValidators();
     assert.equal(validators.length, 1);
   });
+
+  it("should let whitelisted wallets apply for validator before the first week of contract deployment", async () => {
+    await lemaTokenInstance.mint(accounts[7], 200);
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[7],
+    });
+
+    await lemaStakingInstance.enterStaking(200, { from: accounts[7] });
+
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[7] });
+
+    const validators = await lemaGovernanceInstance.getValidators();
+    assert.equal(validators.length, 1);
+  });
 });
