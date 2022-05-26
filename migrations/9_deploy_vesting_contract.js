@@ -20,7 +20,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const lemaTokenInstance = await LemaToken.deployed();
   const lemaPresaleInstance = await PresaleLemaV2.deployed();
-  // const lemaChefInstance = await LemaChefV2.deployed();
+  const lemaChefInstance = await LemaChefV2.deployed();
 
   const lemaTokenVestingInstance = await deployProxy(
     LemaTokenVesting,
@@ -30,7 +30,7 @@ module.exports = async function (deployer, network, accounts) {
       lemaPresaleInstance.address, // _privateSale
       addressForPublicSale, // _publicSale
       addressForMarketing, // _marketing
-      "0x0000000000000000000000000000000000000000", // _stakingIncentiveDiscount: replace with lemaChefInstance.address
+      lemaChefInstance.address, // _stakingIncentiveDiscount: replace with lemaChefInstance.address
       addressForAdvisor, // _advisor
       addressForTeam, // _team
       treasuryAccount, // _treasury
