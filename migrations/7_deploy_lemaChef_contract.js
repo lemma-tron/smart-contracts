@@ -9,7 +9,7 @@ module.exports = async function (deployer, network, accounts) {
     process.env.ADDRESS_FOR_TAX_COLLECTION || accounts[7];
   const lemaTokenInstance = await LemaToken.deployed();
 
-  deployProxy(
+  await deployProxy(
     LemaChefV2,
     [
       lemaTokenInstance.address, // _lemaToken
