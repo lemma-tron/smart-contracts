@@ -53,7 +53,7 @@ abstract contract LemaVoters {
     function changeValidatorOrder(
         uint8 firstValidatorIndex,
         uint8 secondValidatorIndex
-    ) public {
+    ) public virtual {
         require(
             firstValidatorIndex < 3,
             "LemaGovernance: First validator index out of bounds"

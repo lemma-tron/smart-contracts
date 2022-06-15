@@ -225,6 +225,43 @@ contract LemaGovernance is
         LemaValidators.vestVotes(validator, votingPower);
     }
 
+    function changeValidatorOrder(
+        uint8 firstValidatorIndex,
+        uint8 secondValidatorIndex
+    ) public override runningGovernanceOnly whenNotPaused {
+        LemaVoters.changeValidatorOrder(
+            firstValidatorIndex,
+            secondValidatorIndex
+        );
+        if (firstValidatorIndex == 0) {
+            // Scenario 1:
+            // (0, 2) => [2,1,0] Order in which previously indexed addresses are
+            // Desired Behaviour: votes of previously 0 indexed address's vote to be transferred to previously 2nd but currently 0 indexed address
+            address[3]
+                memory votedToValidator = getValidatorsNominatedByNominator(
+                    msg.sender
+                );
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[secondValidatorIndex],
+                votedToValidator[0]
+            );
+        } else if (secondValidatorIndex == 0) {
+            // Scenario 1:
+            // (2, 0) => [2,1,0] Order in which previously indexed addresses are
+            // Desired Behaviour: votes of previously 0 indexed address's vote to be transferred to previously 2nd but currently 0 indexed address
+            address[3]
+                memory votedToValidator = getValidatorsNominatedByNominator(
+                    msg.sender
+                );
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[firstValidatorIndex],
+                votedToValidator[0]
+            );
+        }
+    }
+
     function applyForValidator() public virtual override whenNotPaused {
         if (haveDelagatedValidator(msg.sender)) {
             withdrawVotes(getValidatorsNominatedByNominator(msg.sender)[0]); // using 0 index as votes were accumulated with the first validator among the three returned ones
