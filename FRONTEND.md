@@ -2,7 +2,6 @@
 
 ### LemaGovernance
 
-- [vestVotesToDifferentValidator](contracts/governance/LemaGovernance.sol#:~:text=vestVotesToDifferentValidator) - Vested Votes are delegated to a different validator
 - [getPastGovernances](contracts/governance/LemaGovernance.sol#:~:text=getPastGovernances) - Get the list of past governances along with projects list and winning project on each governance
 - [getProjects](contracts/governance/LemaGovernance.sol#:~:text=getProjects) - Get the list of projects
 - [addProject](contracts/governance/LemaGovernance.sol#:~:text=addProject) - Apply for a project
