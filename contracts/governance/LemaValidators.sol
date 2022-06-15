@@ -191,11 +191,11 @@ abstract contract LemaValidators is OwnableUpgradeable {
         numberOfValidatorAllowed = _numberOfValidatorAllowed;
     }
 
-    function addToBlocklist(address _user) public {
+    function addToBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = true;
     }
 
-    function removeFromBlocklist(address _user) public {
+    function removeFromBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = false;
     }
 
