@@ -262,6 +262,27 @@ contract LemaGovernance is
         }
     }
 
+    function changeValidatorOfIndex(uint8 index, address newValidator)
+        public
+        override
+        runningGovernanceOnly
+        whenNotPaused
+    {
+        address[3] memory votedToValidator = getValidatorsNominatedByNominator(
+            msg.sender
+        );
+        if (index == 0) {
+            // Method in LemaValidators to transfer votes from previously delegated validator to new validator
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[0],
+                newValidator
+            );
+        }
+
+        LemaVoters.changeValidatorOfIndex(index, newValidator);
+    }
+
     function applyForValidator() public virtual override whenNotPaused {
         if (haveDelagatedValidator(msg.sender)) {
             withdrawVotes(getValidatorsNominatedByNominator(msg.sender)[0]); // using 0 index as votes were accumulated with the first validator among the three returned ones
