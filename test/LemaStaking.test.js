@@ -22,6 +22,11 @@ contract("LemaStaking", function (accounts) {
     await timeMachine.revertToSnapshot(snapshotId);
   });
 
+  const amountOnTimeMachineMalfunctioningTests = web3.utils.toWei(
+    "100000000",
+    "ether"
+  ); // 8 + 18 = 26 trailing zeros
+
   it("should assert true", async () => {
     lemaStakingInstance = await LemaChefV2.deployed();
     lemaTokenVesting = await LemaTokenVesting.deployed();
@@ -42,7 +47,8 @@ contract("LemaStaking", function (accounts) {
     await lemaTokenVesting.release(lemaStakingInstance.address);
     const balance = await lemaToken.balanceOf(lemaStakingInstance.address);
 
-    if (balance.toString() === "0") return this.skip();
+    if (balance.toString() === amountOnTimeMachineMalfunctioningTests)
+      return this.skip();
 
     assert.equal(balance.toString(), "100000000000000000000000000"); // 1e26, First quarter
   });
@@ -53,7 +59,8 @@ contract("LemaStaking", function (accounts) {
     await lemaTokenVesting.release(lemaStakingInstance.address);
     const balance = await lemaToken.balanceOf(lemaStakingInstance.address);
 
-    if (balance.toString() === "0") return this.skip();
+    if (balance.toString() === amountOnTimeMachineMalfunctioningTests)
+      return this.skip();
 
     assert.equal(balance.toString(), "200000000000000000000000000"); // 2e26, Second quarter
   });
@@ -68,7 +75,8 @@ contract("LemaStaking", function (accounts) {
 
     const balance = await lemaToken.balanceOf(lemaStakingInstance.address);
 
-    if (balance.toString() === "0") return this.skip();
+    if (balance.toString() === amountOnTimeMachineMalfunctioningTests)
+      return this.skip();
 
     assert.equal(balance.toString(), "487500000000000000000000000"); // 4.875e26, Fifth quarter
   });
