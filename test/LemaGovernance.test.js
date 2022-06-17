@@ -320,8 +320,7 @@ contract("LemaGovernance: Time-Based test cases", function (accounts) {
       assert(false, "should have thrown");
     } catch (error) {
       if (error.message === "should have thrown") return this.skip(); // skipping intentionally as timeMachine may not be working as expected causing test to fail in ganache cli instance
-      const reason = Object.values(error.data)[0].reason;
-      assert.equal(reason, "LemaGovernance: Voting has already ended");
+      assert.equal(error.reason, "LemaGovernance: Voting has already ended");
     }
   });
 });
