@@ -6,6 +6,7 @@
   "scripts": {
     "migrate:initial": "truffle migrate --to 4",
     "migrate:later": "truffle migrate -f 5 --to 6",
+    "migrate:new": "truffle migrate -f 11",
     "test:initial": "truffle test ./test/MockBEP20Before.js",
     "test:later": "truffle test ./test/MockBEP20After.js",
     "network:clean": "truffle networks --clean",

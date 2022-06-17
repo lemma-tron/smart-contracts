@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
-abstract contract LemaValidators is OwnableUpgradeable {
+abstract contract LemaValidatorsV2 is OwnableUpgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     address[] private validators;
@@ -191,11 +191,11 @@ abstract contract LemaValidators is OwnableUpgradeable {
         numberOfValidatorAllowed = _numberOfValidatorAllowed;
     }
 
-    function addToBlocklist(address _user) public {
+    function addToBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = true;
     }
 
-    function removeFromBlocklist(address _user) public {
+    function removeFromBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = false;
     }
 

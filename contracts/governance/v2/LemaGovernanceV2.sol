@@ -4,19 +4,19 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../utils/Pausable.sol";
+import "../../utils/Pausable.sol";
 
-import "../LemaChefV2.sol";
-import "./LemaValidators.sol";
-import "./LemaVoters.sol";
+import "../../LemaChefV2.sol";
+import "./LemaValidatorsV2.sol";
+import "./LemaVotersV2.sol";
 
 // Governance contract of Lemmatrom
-contract LemaGovernance is
+contract LemaGovernanceV2 is
     Initializable,
     OwnableUpgradeable,
     Pausable,
-    LemaValidators,
-    LemaVoters
+    LemaValidatorsV2,
+    LemaVotersV2
 {
     using SafeMathUpgradeable for uint256;
 
@@ -221,8 +221,66 @@ contract LemaGovernance is
         super.delegateValidator(validator);
 
         uint256 votingPower = lemaChef.getVotingPower(msg.sender);
-        LemaVoters.vestVotes(votingPower);
-        LemaValidators.vestVotes(validator, votingPower);
+        LemaVotersV2.vestVotes(votingPower);
+        LemaValidatorsV2.vestVotes(validator, votingPower);
+    }
+
+    function changeValidatorOrder(
+        uint8 firstValidatorIndex,
+        uint8 secondValidatorIndex
+    ) public override runningGovernanceOnly whenNotPaused {
+        LemaVotersV2.changeValidatorOrder(
+            firstValidatorIndex,
+            secondValidatorIndex
+        );
+        if (firstValidatorIndex == 0) {
+            // Scenario 1:
+            // (0, 2) => [2,1,0] Order in which previously indexed addresses are
+            // Desired Behaviour: votes of previously 0 indexed address's vote to be transferred to previously 2nd but currently 0 indexed address
+            address[3]
+                memory votedToValidator = getValidatorsNominatedByNominator(
+                    msg.sender
+                );
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[secondValidatorIndex],
+                votedToValidator[0]
+            );
+        } else if (secondValidatorIndex == 0) {
+            // Scenario 1:
+            // (2, 0) => [2,1,0] Order in which previously indexed addresses are
+            // Desired Behaviour: votes of previously 0 indexed address's vote to be transferred to previously 2nd but currently 0 indexed address
+            address[3]
+                memory votedToValidator = getValidatorsNominatedByNominator(
+                    msg.sender
+                );
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[firstValidatorIndex],
+                votedToValidator[0]
+            );
+        }
+    }
+
+    function changeValidatorOfIndex(uint8 index, address newValidator)
+        public
+        override
+        runningGovernanceOnly
+        whenNotPaused
+    {
+        address[3] memory votedToValidator = getValidatorsNominatedByNominator(
+            msg.sender
+        );
+        if (index == 0) {
+            // Method in LemaValidatorsV2 to transfer votes from previously delegated validator to new validator
+            _vestVotesToDifferentValidator(
+                msg.sender,
+                votedToValidator[0],
+                newValidator
+            );
+        }
+
+        LemaVotersV2.changeValidatorOfIndex(index, newValidator);
     }
 
     function applyForValidator() public virtual override whenNotPaused {
