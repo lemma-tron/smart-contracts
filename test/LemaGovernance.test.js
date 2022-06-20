@@ -1,6 +1,6 @@
 const timeMachine = require("ganache-time-traveler");
 
-const LemaGovernance = artifacts.require("LemaGovernance");
+const LemaGovernance = artifacts.require("LemaGovernanceV2");
 const LemaToken = artifacts.require("LemaToken");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 
@@ -409,5 +409,112 @@ contract("LemaGovernance: Validator", function (accounts) {
 
     const validators = await lemaGovernanceInstance.getValidators();
     assert.equal(validators.length, 1);
+  });
+});
+
+contract("LemaGovernance: Nominator", function (accounts) {
+  it("should assert true", async () => {
+    lemaGovernanceInstance = await LemaGovernance.deployed();
+    lemaStakingInstance = await LemaChefV2.deployed();
+    lemaTokenInstance = await LemaToken.deployed();
+    assert(
+      lemaTokenInstance !== undefined,
+      "LemaToken contract should be defined"
+    );
+    assert(
+      lemaStakingInstance !== undefined,
+      "LemaChef contract should be defined"
+    );
+    assert(
+      lemaGovernanceInstance !== undefined,
+      "LemaGovernance contract should be defined"
+    );
+
+    await lemaTokenInstance.mint(accounts[3], 200);
+    await lemaTokenInstance.mint(accounts[4], 200);
+    await lemaTokenInstance.mint(accounts[5], 200);
+    await lemaTokenInstance.mint(accounts[6], 200);
+    await lemaTokenInstance.mint(accounts[7], 200);
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[3],
+    });
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[4],
+    });
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[5],
+    });
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[6],
+    });
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[7],
+    });
+
+    await lemaStakingInstance.enterStaking(200, { from: accounts[3] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[4] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[5] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[6] });
+    await lemaStakingInstance.enterStaking(200, { from: accounts[7] });
+
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[3] });
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[4] });
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[5] });
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[6] });
+    await lemaGovernanceInstance.applyForValidator({ from: accounts[7] });
+
+    const validators = await lemaGovernanceInstance.getValidators();
+    assert.equal(validators.length, 5);
+  });
+
+  it("should let nominator to choose upto 3 validators", async () => {
+    const validators = await lemaGovernanceInstance.getValidators();
+
+    await lemaTokenInstance.mint(accounts[2], 10);
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 10, {
+      from: accounts[2],
+    });
+    await lemaStakingInstance.enterStaking(10, { from: accounts[2] });
+
+    await lemaGovernanceInstance.delegateValidator(validators[0], {
+      from: accounts[2],
+    });
+    await lemaGovernanceInstance.delegateMoreValidator(validators[1], {
+      from: accounts[2],
+    });
+    await lemaGovernanceInstance.delegateMoreValidator(validators[2], {
+      from: accounts[2],
+    });
+
+    const delegatedValidator =
+      await lemaGovernanceInstance.haveDelagatedValidator(accounts[2]);
+    assert.equal(delegatedValidator, true);
+
+    const voteCount = await lemaGovernanceInstance.getVoteCount(validators[0]);
+    // console.log("Vote Count:", voteCount.toString());  // 10000000000000000
+    assert.equal(voteCount.toString(), "10000000000000000"); // 1e16 as 1e15 base multiplier x 10 tokens x 0 days
+  });
+
+  it("should let nominator to replace choosen validator", async () => {
+    const validators = await lemaGovernanceInstance.getValidators();
+
+    let voteCount = await lemaGovernanceInstance.getVoteCount(validators[3]);
+    // console.log("Vote Count:", voteCount.toString()); // 0
+    assert.equal(voteCount.toString(), "0");
+    await lemaGovernanceInstance.changeValidatorOfIndex(0, validators[3], {
+      from: accounts[2],
+    });
+
+    voteCount = await lemaGovernanceInstance.getVoteCount(validators[3]);
+    // console.log("Vote Count:", voteCount.toString()); // 10000000000000000
+    assert.equal(voteCount.toString(), "10000000000000000");
+
+    await lemaGovernanceInstance.changeValidatorOfIndex(1, validators[4], {
+      from: accounts[2],
+    });
+
+    voteCount = await lemaGovernanceInstance.getVoteCount(validators[4]);
+    // console.log("Vote Count:", voteCount.toString()); // 0
+    assert.equal(voteCount.toString(), "0");
   });
 });
