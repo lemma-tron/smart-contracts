@@ -23,7 +23,7 @@ module.exports = async function (deployer, network) {
   const taxHandlerInstance = await deployProxy(
     TaxHandler,
     [
-      0, // 0% for rest of exchanges
+      500, // 5% for exchanges with exchange pools
       routerAddress, // router address
     ],
     {
