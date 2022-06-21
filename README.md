@@ -1,5 +1,7 @@
 # Lemmatron Smart Contracts
 
+[![Node.js CI](https://github.com/lemma-tron/smart-contracts/actions/workflows/node.js.yml/badge.svg)](https://github.com/lemma-tron/smart-contracts/actions/workflows/node.js.yml)
+
 **This project is work in progress**. This project holds smart contracts of Lemmatron.
 
 ## Smart Contracts
