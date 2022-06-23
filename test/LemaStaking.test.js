@@ -81,3 +81,29 @@ contract("LemaStaking", function (accounts) {
     assert.equal(balance.toString(), "487500000000000000000000000"); // 4.875e26, Fifth quarter
   });
 });
+
+contract("LemaStaking: Staking Cycle", function (accounts) {
+  it("should assert true", async () => {
+    lemaStakingInstance = await LemaChefV2.deployed();
+    lemaTokenInstance = await LemaToken.deployed();
+
+    await lemaTokenInstance.mint(accounts[1], 1000);
+
+    return assert(
+      lemaStakingInstance !== undefined,
+      "LemaChefV2 contract should be defined"
+    );
+  });
+
+  it("should not throw any error", async () => {
+    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+      from: accounts[1],
+    });
+
+    await lemaStakingInstance.enterStaking(200, { from: accounts[1] }); // amount
+
+    await lemaStakingInstance.withdrawReward(0, { from: accounts[1] }); // pool id
+
+    await lemaStakingInstance.leaveStaking(200, { from: accounts[1] }); // amount
+  });
+});
