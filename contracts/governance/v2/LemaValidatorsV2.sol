@@ -162,7 +162,9 @@ abstract contract LemaValidatorsV2 is OwnableUpgradeable {
             "LemaGovernance: Validator index out of bounds"
         );
         validatorExists[validators[index]] = false;
-        validators[index] = validators[validators.length - 1];
+        if (index < validators.length - 1) {
+            validators[index] = validators[validators.length - 1];
+        }
         validators.pop();
     }
 
