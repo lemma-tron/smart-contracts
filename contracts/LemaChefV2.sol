@@ -607,12 +607,13 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable, Pausable {
             transferRewardWithWithdrawFee(user.lastDeposited, pending);
         }
         if (_amount > 0) {
+            user.amount = user.amount.sub(_amount);
+
             // check for validator
-            if (_amount > lemaGovernance.getValidatorsMinStake()) {
+            if (user.amount <= lemaGovernance.getValidatorsMinStake()) {
                 lemaGovernance.leftStakingAsValidator(msg.sender);
             }
 
-            user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
         user.rewardDebt = rewardDebt;
