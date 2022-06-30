@@ -53,7 +53,7 @@ abstract contract LemaVoters {
     function changeValidatorOrder(
         uint8 firstValidatorIndex,
         uint8 secondValidatorIndex
-    ) public {
+    ) public virtual {
         require(
             firstValidatorIndex < 3,
             "LemaGovernance: First validator index out of bounds"
@@ -67,6 +67,17 @@ abstract contract LemaVoters {
             msg.sender
         ][secondValidatorIndex];
         votedToValidator[msg.sender][secondValidatorIndex] = temp;
+    }
+
+    function changeValidatorOfIndex(uint8 validatorIndex, address validator)
+        public
+        virtual
+    {
+        require(
+            validatorIndex < 3,
+            "LemaGovernance: Validator index out of bounds"
+        );
+        votedToValidator[msg.sender][validatorIndex] = validator;
     }
 
     function unDelegateValidator() internal {

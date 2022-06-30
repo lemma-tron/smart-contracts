@@ -137,6 +137,10 @@ abstract contract LemaValidators is OwnableUpgradeable {
             validators.length < numberOfValidatorAllowed,
             "Validators allowed exceeded"
         );
+        require(
+            !validatorExists[msg.sender],
+            "LemaGovernance: You are already a validator"
+        );
 
         validatorExists[msg.sender] = true;
         validators.push(msg.sender);
@@ -162,7 +166,9 @@ abstract contract LemaValidators is OwnableUpgradeable {
             "LemaGovernance: Validator index out of bounds"
         );
         validatorExists[validators[index]] = false;
-        validators[index] = validators[validators.length - 1];
+        if (index < validators.length - 1) {
+            validators[index] = validators[validators.length - 1];
+        }
         validators.pop();
     }
 
@@ -191,11 +197,11 @@ abstract contract LemaValidators is OwnableUpgradeable {
         numberOfValidatorAllowed = _numberOfValidatorAllowed;
     }
 
-    function addToBlocklist(address _user) public {
+    function addToBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = true;
     }
 
-    function removeFromBlocklist(address _user) public {
+    function removeFromBlocklist(address _user) public onlyOwner {
         blocklisted[_user] = false;
     }
 

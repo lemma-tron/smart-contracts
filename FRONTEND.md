@@ -18,7 +18,7 @@
 - [haveDelagatedValidator](contracts/governance/LemaVoters.sol#:~:text=haveDelagatedValidator) - Check if a voter has delegated a validator
 - [delegateMoreValidator](contracts/governance/LemaVoters.sol#:~:text=delegateMoreValidator) - Delegate more than one validator
 - [changeValidatorOrder](contracts/governance/LemaVoters.sol#:~:text=changeValidatorOrder) - Change the order of the validators
-- [changeValidatorOfIndex](contracts/governance/v2/LemaGovernanceV2.sol#:~:text=changeValidatorOfIndex) - Change the validator of the index
+- [changeValidatorOfIndex](contracts/governance/LemaGovernance.sol#:~:text=changeValidatorOfIndex) - Change the validator of the index
 - [getValidatorsNominatedByNominator](contracts/governance/LemaVoters.sol#:~:text=getValidatorsNominatedByNominator) - Get the list of validators nominated by a nominator
 
 ### LemaChef
