@@ -42,7 +42,7 @@ abstract contract LemaValidatorsV2 is OwnableUpgradeable {
     {
         __Ownable_init();
         numberOfValidatorAllowed = 10;
-        validatorMinStake = 200;
+        validatorMinStake = 200000000000000000000;
 
         for (uint256 i = 0; i < _whitelisted.length; i++) {
             whitelisted.add(_whitelisted[i]);
