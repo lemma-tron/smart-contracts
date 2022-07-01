@@ -160,7 +160,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
     }
 
     // remove for validator
-    function removeFromValidatorByIndex(uint256 index) public onlyOwner {
+    function removeFromValidatorByIndex(uint256 index) internal {
         require(
             index < validators.length,
             "LemaGovernance: Validator index out of bounds"

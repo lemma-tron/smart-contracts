@@ -3,6 +3,7 @@ const timeMachine = require("ganache-time-traveler");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 const LemaTokenVesting = artifacts.require("LemaTokenVesting");
 const LemaToken = artifacts.require("LemaToken");
+const LemaGovernance = artifacts.require("LemaGovernance");
 
 let lemaStakingInstance;
 let lemaTokenVesting;
@@ -87,8 +88,6 @@ contract("LemaStaking: Staking Cycle", function (accounts) {
     lemaStakingInstance = await LemaChefV2.deployed();
     lemaTokenInstance = await LemaToken.deployed();
 
-    await lemaTokenInstance.mint(accounts[1], 1000);
-
     return assert(
       lemaStakingInstance !== undefined,
       "LemaChefV2 contract should be defined"
@@ -96,14 +95,33 @@ contract("LemaStaking: Staking Cycle", function (accounts) {
   });
 
   it("should not throw any error", async () => {
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
-      from: accounts[1],
-    });
+    const lemaGovernanceInstance = await LemaGovernance.deployed();
+    const validatorMinStake =
+      await lemaGovernanceInstance.getValidatorsMinStake();
 
-    await lemaStakingInstance.enterStaking(200, { from: accounts[1] }); // amount
+    await lemaTokenInstance.mint(accounts[1], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[1],
+      }
+    );
+
+    // let validators = await lemaGovernanceInstance.getValidators();
+    // console.log("Validators before: ", validators);
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
+      from: accounts[1],
+    }); // amount
+    // validators = await lemaGovernanceInstance.getValidators();
+    // console.log("Validators middle: ", validators);
 
     await lemaStakingInstance.withdrawReward(0, { from: accounts[1] }); // pool id
 
-    await lemaStakingInstance.leaveStaking(200, { from: accounts[1] }); // amount
+    await lemaStakingInstance.leaveStaking(validatorMinStake, {
+      from: accounts[1],
+    }); // amount
+    // validators = await lemaGovernanceInstance.getValidators();
+    // console.log("Validators after: ", validators);
   });
 });

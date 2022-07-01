@@ -1,6 +1,6 @@
 const timeMachine = require("ganache-time-traveler");
 
-const LemaGovernance = artifacts.require("LemaGovernanceV2");
+const LemaGovernance = artifacts.require("LemaGovernance");
 const LemaToken = artifacts.require("LemaToken");
 const LemaChefV2 = artifacts.require("LemaChefV2");
 
@@ -8,11 +8,14 @@ let lemaGovernanceInstance;
 let lemaTokenInstance;
 let lemaStakingInstance;
 
+let validatorMinStake;
+
 contract("LemaGovernance", function (accounts) {
   it("should assert true", async () => {
     lemaGovernanceInstance = await LemaGovernance.deployed();
     lemaStakingInstance = await LemaChefV2.deployed();
     lemaTokenInstance = await LemaToken.deployed();
+
     assert(
       lemaTokenInstance !== undefined,
       "LemaToken contract should be defined"
@@ -21,10 +24,12 @@ contract("LemaGovernance", function (accounts) {
       lemaStakingInstance !== undefined,
       "LemaChef contract should be defined"
     );
-    return assert(
+    assert(
       lemaGovernanceInstance !== undefined,
       "LemaGovernance contract should be defined"
     );
+
+    validatorMinStake = await lemaGovernanceInstance.getValidatorsMinStake();
   });
 
   it("should have treasury address", async () => {
@@ -118,10 +123,13 @@ contract("LemaGovernance", function (accounts) {
   });
 
   it("should accept validators", async () => {
-    await lemaTokenInstance.mint(accounts[0], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200);
+    await lemaTokenInstance.mint(accounts[0], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake
+    );
 
-    await lemaStakingInstance.enterStaking(200);
+    await lemaStakingInstance.enterStaking(validatorMinStake);
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[0] });
 
@@ -179,12 +187,18 @@ contract("LemaGovernance", function (accounts) {
   });
 
   it("should not have a validators's votes delegated to other validators", async () => {
-    await lemaTokenInstance.mint(accounts[2], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaTokenInstance.mint(accounts[2], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[2],
+      }
+    );
+
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[2],
     });
-
-    await lemaStakingInstance.enterStaking(200, { from: accounts[2] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[2] });
 
@@ -260,12 +274,18 @@ contract("LemaGovernance: Slashing", function (accounts) {
   });
 
   it("add a stimulated offline validator", async () => {
-    await lemaTokenInstance.mint(accounts[6], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaTokenInstance.mint(accounts[6], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[6],
+      }
+    );
+
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[6],
     });
-
-    await lemaStakingInstance.enterStaking(200, { from: accounts[6] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[6] });
 
@@ -287,8 +307,8 @@ contract("LemaGovernance: Slashing", function (accounts) {
       accounts[6]
     );
     // assert(finalStakedAmount < initialStakedAmount);
-    assert.equal(initialStakedAmount.toString(), "200");
-    assert.equal(finalStakedAmount.toString(), "186");
+    assert.equal(initialStakedAmount.toString(), validatorMinStake.toString());
+    assert.equal(finalStakedAmount.toString(), "186000000000000000000");
   });
 });
 
@@ -374,12 +394,18 @@ contract("LemaGovernance: Validator", function (accounts) {
   });
 
   it("should let non-whitelisted wallets apply for validator after the first week of contract deployment", async function () {
-    await lemaTokenInstance.mint(accounts[9], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaTokenInstance.mint(accounts[9], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[9],
+      }
+    );
+
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[9],
     });
-
-    await lemaStakingInstance.enterStaking(200, { from: accounts[9] });
 
     await timeMachine.advanceTimeAndBlock(60 * 60 * 24 * 7);
 
@@ -398,12 +424,18 @@ contract("LemaGovernance: Validator", function (accounts) {
   });
 
   it("should let whitelisted wallets apply for validator before the first week of contract deployment", async () => {
-    await lemaTokenInstance.mint(accounts[7], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaTokenInstance.mint(accounts[7], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[7],
+      }
+    );
+
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[7],
     });
-
-    await lemaStakingInstance.enterStaking(200, { from: accounts[7] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[7] });
 
@@ -430,32 +462,62 @@ contract("LemaGovernance: Nominator", function (accounts) {
       "LemaGovernance contract should be defined"
     );
 
-    await lemaTokenInstance.mint(accounts[3], 200);
-    await lemaTokenInstance.mint(accounts[4], 200);
-    await lemaTokenInstance.mint(accounts[5], 200);
-    await lemaTokenInstance.mint(accounts[6], 200);
-    await lemaTokenInstance.mint(accounts[7], 200);
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaTokenInstance.mint(accounts[3], validatorMinStake);
+    await lemaTokenInstance.mint(accounts[4], validatorMinStake);
+    await lemaTokenInstance.mint(accounts[5], validatorMinStake);
+    await lemaTokenInstance.mint(accounts[6], validatorMinStake);
+    await lemaTokenInstance.mint(accounts[7], validatorMinStake);
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[3],
+      }
+    );
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[4],
+      }
+    );
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[5],
+      }
+    );
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[6],
+      }
+    );
+    await lemaTokenInstance.approve(
+      lemaStakingInstance.address,
+      validatorMinStake,
+      {
+        from: accounts[7],
+      }
+    );
+
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[3],
     });
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[4],
     });
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[5],
     });
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[6],
     });
-    await lemaTokenInstance.approve(lemaStakingInstance.address, 200, {
+    await lemaStakingInstance.enterStaking(validatorMinStake, {
       from: accounts[7],
     });
-
-    await lemaStakingInstance.enterStaking(200, { from: accounts[3] });
-    await lemaStakingInstance.enterStaking(200, { from: accounts[4] });
-    await lemaStakingInstance.enterStaking(200, { from: accounts[5] });
-    await lemaStakingInstance.enterStaking(200, { from: accounts[6] });
-    await lemaStakingInstance.enterStaking(200, { from: accounts[7] });
 
     await lemaGovernanceInstance.applyForValidator({ from: accounts[3] });
     await lemaGovernanceInstance.applyForValidator({ from: accounts[4] });
