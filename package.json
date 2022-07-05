@@ -16,7 +16,8 @@
     "test": "bash ./scripts/run_tests.sh",
     "compile": "hardhat compile",
     "prepare": "husky install",
-    "deploy:bscTestnet:lemaContracts": "hardhat run scripts/deploy-lemaContracts.js --network bscTestnet"
+    "deploy:bscTestnet:lemaContracts": "hardhat run scripts/deploy-lemaContracts.js --network bscTestnet",
+    "upgrade:bscTestnet:lemaGovernance": "hardhat run scripts/upgrade-governance.js --network bscTestnet"
   },
   "keywords": [],
   "author": "",

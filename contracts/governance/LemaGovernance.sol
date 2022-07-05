@@ -194,6 +194,10 @@ contract LemaGovernance is
         project.mediumLink = _mediumLink;
     }
 
+    function removeLastProject() external runningGovernanceOnly whenNotPaused {
+        currentGovernance.projects.pop();
+    }
+
     function approveProject(uint256 index)
         external
         runningGovernanceOnly
