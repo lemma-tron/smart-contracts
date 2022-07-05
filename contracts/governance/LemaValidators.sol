@@ -7,21 +7,20 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeab
 abstract contract LemaValidators is OwnableUpgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
-    address[] private validators;
-    mapping(address => bool) private validatorExists;
+    EnumerableSetUpgradeable.AddressSet private validators;
     uint256 private numberOfValidatorAllowed;
     uint256 private validatorMinStake;
     uint256 private castedVoteCount;
     mapping(address => bool) private castedVote;
     mapping(address => uint256) private voteCount;
     mapping(address => uint256) private votingPower;
-    mapping(address => bool) private blocklisted;
+    EnumerableSetUpgradeable.AddressSet private blocklisted;
     EnumerableSetUpgradeable.AddressSet private whitelisted;
     uint256 private previlegeForValidatorTill;
 
     modifier validValidatorsOnly() {
         require(
-            validatorExists[msg.sender],
+            validators.contains(msg.sender),
             "LemaGovernance: Only validators can cast a vote"
         );
         _;
@@ -52,14 +51,26 @@ abstract contract LemaValidators is OwnableUpgradeable {
     }
 
     function getValidators() public view returns (address[] memory) {
-        return validators;
+        return validators.values();
     }
 
-    function getVoteCount(address validator) public view returns (uint256) {
+    function getVoteCount(address validator) external view returns (uint256) {
         return voteCount[validator];
     }
 
-    function getWhitelistedValidators() public view returns (address[] memory) {
+    function getNumberOfValidatorAllowed() public view returns (uint256) {
+        return numberOfValidatorAllowed;
+    }
+
+    function getBlockListedAddresses() public view returns (address[] memory) {
+        return blocklisted.values();
+    }
+
+    function getWhitelistedValidators()
+        external
+        view
+        returns (address[] memory)
+    {
         return whitelisted.values();
     }
 
@@ -68,13 +79,14 @@ abstract contract LemaValidators is OwnableUpgradeable {
         view
         returns (address[] memory)
     {
+        uint256 validatorsLength = validators.length();
         address[] memory offlineValidators = new address[](
-            validators.length - castedVoteCount
+            validatorsLength - castedVoteCount
         );
         uint256 numberOfOfflineValidators = 0;
-        for (uint256 i = 0; i < validators.length; i++) {
-            if (!castedVote[validators[i]]) {
-                offlineValidators[numberOfOfflineValidators] = validators[i];
+        for (uint256 i = 0; i < validatorsLength; i++) {
+            if (!castedVote[validators.at(i)]) {
+                offlineValidators[numberOfOfflineValidators] = validators.at(i);
                 numberOfOfflineValidators++;
             }
         }
@@ -88,9 +100,9 @@ abstract contract LemaValidators is OwnableUpgradeable {
     {
         address[] memory onlineValidators = new address[](castedVoteCount);
         uint256 numberOfOnlineValidators = 0;
-        for (uint256 i = 0; i < validators.length; i++) {
-            if (castedVote[validators[i]]) {
-                onlineValidators[numberOfOnlineValidators] = validators[i];
+        for (uint256 i = 0; i < validators.length(); i++) {
+            if (castedVote[validators.at(i)]) {
+                onlineValidators[numberOfOnlineValidators] = validators.at(i);
                 numberOfOnlineValidators++;
             }
         }
@@ -102,7 +114,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
         view
         returns (bool)
     {
-        return validatorExists[_validator];
+        return validators.contains(_validator);
     }
 
     function updateCastedVote(bool _castedVote) internal {
@@ -132,27 +144,29 @@ abstract contract LemaValidators is OwnableUpgradeable {
 
     // apply for validator
     function applyForValidator() public virtual previlegedApplied {
-        require(!blocklisted[msg.sender], "LemaGovernance: Blocklisted wallet");
         require(
-            validators.length < numberOfValidatorAllowed,
+            !blocklisted.contains(msg.sender),
+            "LemaGovernance: Blocklisted wallet"
+        );
+        require(
+            validators.length() < numberOfValidatorAllowed,
             "Validators allowed exceeded"
         );
         require(
-            !validatorExists[msg.sender],
+            !validators.contains(msg.sender),
             "LemaGovernance: You are already a validator"
         );
 
-        validatorExists[msg.sender] = true;
-        validators.push(msg.sender);
+        validators.add(msg.sender);
     }
 
-    function leaveFromValidator() public {
+    function leaveFromValidator() external {
         require(
-            validatorExists[msg.sender],
+            validators.remove(msg.sender),
             "LemaGovernance: Only validators can leave from validator"
         );
         require(
-            validators.length > 1,
+            validators.length() > 1,
             "LemaGovernance: At least one validator must be present"
         );
 
@@ -161,15 +175,12 @@ abstract contract LemaValidators is OwnableUpgradeable {
 
     // remove for validator
     function removeFromValidatorByIndex(uint256 index) internal {
+        uint256 validatorsLength = validators.length();
         require(
-            index < validators.length,
+            index < validatorsLength,
             "LemaGovernance: Validator index out of bounds"
         );
-        validatorExists[validators[index]] = false;
-        if (index < validators.length - 1) {
-            validators[index] = validators[validators.length - 1];
-        }
-        validators.pop();
+        validators.remove(validators.at(index));
     }
 
     function getValidatorIndex(address _validator)
@@ -177,8 +188,8 @@ abstract contract LemaValidators is OwnableUpgradeable {
         view
         returns (uint256)
     {
-        for (uint256 i = 0; i < validators.length; i++) {
-            if (validators[i] == _validator) {
+        for (uint256 i = 0; i < validators.length(); i++) {
+            if (validators.at(i) == _validator) {
                 return i;
             }
         }
@@ -191,18 +202,18 @@ abstract contract LemaValidators is OwnableUpgradeable {
 
     // update numberOfValidatorAllowed
     function updateNumberOfValidatorAllowed(uint256 _numberOfValidatorAllowed)
-        public
+        external
         onlyOwner
     {
         numberOfValidatorAllowed = _numberOfValidatorAllowed;
     }
 
-    function addToBlocklist(address _user) public onlyOwner {
-        blocklisted[_user] = true;
+    function addToBlocklist(address _user) external onlyOwner {
+        blocklisted.add(_user);
     }
 
-    function removeFromBlocklist(address _user) public onlyOwner {
-        blocklisted[_user] = false;
+    function removeFromBlocklist(address _user) external onlyOwner {
+        blocklisted.remove(_user);
     }
 
     function vestVotes(address validator, uint256 _votingPower) internal {

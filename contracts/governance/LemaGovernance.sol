@@ -131,7 +131,7 @@ contract LemaGovernance is
         address nominator,
         address previousValidator,
         address newValidator
-    ) public onlyLemaChef whenNotPaused {
+    ) external onlyLemaChef whenNotPaused {
         _vestVotesToDifferentValidator(
             nominator,
             previousValidator,
