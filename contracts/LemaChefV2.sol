@@ -430,10 +430,9 @@ contract LemaChefV2 is Initializable, OwnableUpgradeable, Pausable {
         pure
         returns (uint256)
     {
+        uint256 multiplier = user.multiplier == 0 ? 1e4 : user.multiplier;
         return
-            user.amount.mul(accLEMAPerShare).div(1e12).mul(user.multiplier).div(
-                1e4
-            );
+            user.amount.mul(accLEMAPerShare).div(1e12).mul(multiplier).div(1e4);
     }
 
     // Deposit LP tokens to LemaChef for Lema allocation.
