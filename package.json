@@ -21,7 +21,8 @@
     "upgrade:bscTestnet:lemaChef": "hardhat run scripts/upgrade-lemaChef.js --network bscTestnet",
     "verify:bscTestnet:lemaToken": "hardhat verify --network bscTestnet 0x7DC381F8396FfF9Cb004fEA725cD22cA86D4Ace3",
     "verify:bscTestnet:lemaChef": "hardhat verify --network bscTestnet 0xC1f046C95d2f39C90657b4AD30ca5a46E0D50B5a",
-    "verify:bscTestnet:lemaGovernance": "hardhat verify --network bscTestnet 0xEA148833F2AA7Db56558ca8907ccaeeE1fe2f41c"
+    "verify:bscTestnet:lemaGovernance": "hardhat verify --network bscTestnet 0xEA148833F2AA7Db56558ca8907ccaeeE1fe2f41c",
+    "transferOwnership:bscTestnet": "hardhat run scripts/transferOwnership.js --network bscTestnet"
   },
   "keywords": [],
   "author": "",
