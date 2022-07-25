@@ -250,7 +250,7 @@ contract("LemaGovernance", function (accounts) {
     assert.equal(mostVotedProjectIndex, 0);
 
     const winningVoteCount = currentGovernance.winningVoteCount;
-    assert.equal(winningVoteCount, 1);
+    assert.equal(winningVoteCount, 200 * 1e18 * 1e15); // 200 tokens x 0 days x 1e18 token base multiplier x 1e15 votingPower base multiplier
   });
 });
 

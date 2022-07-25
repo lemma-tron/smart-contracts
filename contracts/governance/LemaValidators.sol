@@ -54,7 +54,7 @@ abstract contract LemaValidators is OwnableUpgradeable {
         return validators.values();
     }
 
-    function getVoteCount(address validator) external view returns (uint256) {
+    function getVoteCount(address validator) public view returns (uint256) {
         return voteCount[validator];
     }
 

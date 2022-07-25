@@ -341,8 +341,21 @@ contract LemaGovernance is
             index++
         ) {
             Project storage project = currentGovernance.projects[index];
-            if (project.validatorVoters.length > mostVotes) {
-                mostVotes = project.validatorVoters.length;
+            uint256 accumulatedVotingPower = 0;
+            for (
+                uint256 voterIndex = 0;
+                voterIndex < project.validatorVoters.length;
+                voterIndex++
+            ) {
+                accumulatedVotingPower += lemaChef.getVotingPower(
+                    project.validatorVoters[voterIndex]
+                );
+                accumulatedVotingPower += getVoteCount(
+                    project.validatorVoters[voterIndex]
+                );
+            }
+            if (accumulatedVotingPower > mostVotes) {
+                mostVotes = accumulatedVotingPower;
                 mostVotedIndex = index;
             }
         }
